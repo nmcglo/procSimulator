@@ -1,4 +1,4 @@
-/* 
+ /* 
  *  --- Operating Systems Homework 2 --- 
  * Copyright (c) 2014, Mark Plagge -- plaggm
  * All rights reserved.

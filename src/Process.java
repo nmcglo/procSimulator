@@ -27,12 +27,23 @@
 import org.jruby.Main;
 import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
-import scInterfaces.AbstractProcess;
+import java.util.HashMap;
+import stateEnums.ProcessState;
+import static stateEnums.ProcessState.Idle;
 
-public class Process extends scInterfaces.AbstractProcess {
 
- private ScriptingContainer ruby;
+public class Process extends AbstractProcess {
 
+   
+
+    private ScriptingContainer ruby;
+    
+
+    public Process(int pid, boolean isInteractive, int burstValue, int priority, int startTime) {
+        super(pid, isInteractive, burstValue, priority, startTime);
+        //set up tming info:
+
+    }
     @Override
     public boolean isDone() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -40,8 +51,32 @@ public class Process extends scInterfaces.AbstractProcess {
     
     @Override
     public void tick() {
+       
+               timings.replace(pState, timings.get(pState) + 1);                 
+        }   
+
+    @Override
+    public int getTotalWaitTime() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public int remIoWait() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int remActiveTime() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int remUserWait() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+       
+    
+
  
  
 

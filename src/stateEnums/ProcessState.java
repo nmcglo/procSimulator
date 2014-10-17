@@ -37,7 +37,6 @@ package stateEnums;
  * @author Mark
  */
 
-
 public enum ProcessState {
     Idle,
     UserWait,
