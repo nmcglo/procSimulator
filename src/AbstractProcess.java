@@ -90,6 +90,10 @@ public abstract class AbstractProcess {
     //Timing getter:
     public int getTiming(ProcessState stq){
         return timings.get(stq);
+    } 
+    public int getTiming(String sq) {
+        return timings.get(ProcessState.valueOf(sq));
+        
     }
     //return timings (current process times):
       public int getActiveTime() {

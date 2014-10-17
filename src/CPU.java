@@ -24,6 +24,27 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-public class CPU {
+public class CPU extends AbstractCPU{
+    CPUTuple cpuContents;
+    @Override
+    public void addProcess(AbstractProcess p) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public AbstractProcess rmProcess() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void tick() {
+        if(cpuContents == null)
+            this.idleTime ++;
+        else
+            cpuContents.proc.tick();
+        
+    }
+
+
 
 }

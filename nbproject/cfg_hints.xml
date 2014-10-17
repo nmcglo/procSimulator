@@ -36,5 +36,8 @@
         <node name="Javac_RAWTYPES">
             <attribute name="enabled" value="true"/>
         </node>
+        <node name="org.netbeans.modules.java.hints.AssignResultToVariable">
+            <attribute name="enabled" value="false"/>
+        </node>
     </tool>
 </configuration>
