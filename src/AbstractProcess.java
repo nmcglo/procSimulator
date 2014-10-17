@@ -49,6 +49,8 @@ public abstract class AbstractProcess {
     int ioWait;
     /** burstValue is the total CPU time needed. **/
     int burstValue;
+    /** burstNums is the number of CPU burst times left **/
+    int burstNums;
     int priority;
     int userWait;
     
@@ -76,12 +78,12 @@ public abstract class AbstractProcess {
         //set up timing table:
                 timings = new HashMap<>(6);
         int it = 0;
-        timings.put(Idle, it);
-        timings.put(UserWait, it);
-        timings.put(IOWait, it);
-        timings.put(Active, it);
-        timings.put(Terminated, it);
-        timings.put(CTXSwitch, it);
+        timings.put(ProcessState.Idle, it);
+        timings.put(ProcessState.UserWait, it);
+        timings.put(ProcessState.IOWait, it);
+        timings.put(ProcessState.Active, it);
+        timings.put(ProcessState.Terminated, it);
+        timings.put(ProcessState.CTXSwitch, it);
     }
     public boolean isInteractive()
     {
@@ -92,7 +94,7 @@ public abstract class AbstractProcess {
         return timings.get(stq);
     } 
     public int getTiming(String sq) {
-        return timings.get(ProcessState.valueOf(sq));
+        return getTiming(ProcessState.valueOf(sq));
         
     }
     //return timings (current process times):

@@ -28,25 +28,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import org.jruby.Main;
-import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
-import java.util.HashMap;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import stateEnums.ProcessState;
-import static stateEnums.ProcessState.Idle;
-import org.jruby.*;
+import static stateEnums.ProcessState.CTXSwitch;
+import static stateEnums.ProcessState.IOWait;
  
 
 
@@ -75,12 +68,12 @@ public class Process extends AbstractProcess {
     }
     public Process(int pid, boolean isInteractive, int burstValue, int priority, int startTime) {
         super(pid, isInteractive, burstValue, priority, startTime);
-        
+        burstNums = 8;
         //set up tming info:
         /* Due to dec. to not use Ruby here, I used a hashmap instead. Code left
         as a warning or tutorial on jruby integration. */
         createRuby(null);
-         
+        hasRuby = false;
 
     }
   
@@ -130,8 +123,25 @@ public class Process extends AbstractProcess {
         timings.replace(pState, timings.get(pState) + 1);
     }
     @Override
+    public int getTiming(stateEnums.ProcessState stq){
+        if(hasRuby)
+            try {
+                return (getTr(stq.toString()));
+                
+        } catch (ScriptException|NoSuchMethodException ex) {
+            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+            hasRuby = false;
+            
+        } 
+        
+        return timings.get(stq);
+        
+ 
+    }
+    @Override
     public int getTotalWaitTime() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return getTiming(stateEnums.ProcessState.IOWait) + getTiming(stateEnums.ProcessState.UserWait)
+                + getTiming(stateEnums.ProcessState.CTXSwitch) +getTiming(stateEnums.ProcessState.Idle) ;
     }
 
     @Override
@@ -141,21 +151,11 @@ public class Process extends AbstractProcess {
 
     @Override
     public int remActiveTime() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return burstValue;
     }
 
     @Override
     public int remUserWait() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-       
-  
-
- 
- class rbTimings{
-     
- }
-
-
-
-}
+}       
