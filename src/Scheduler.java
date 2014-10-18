@@ -135,7 +135,7 @@ public class Scheduler
 	
 	
 	//BEGIN OTHER METHODS*****************************************************
-	public void addProcess(Process p)
+	public void addNewProcess(Process p)
 	{
 		this.numProcs++;
 		this.allProcesses.add(p);
@@ -148,13 +148,23 @@ public class Scheduler
 		this.cpus.add(cpu);
 	}
 	
-	public void moveToCPU(int pid)
+	public void moveToCPU()
 	{
-		//Find a ready CPU
+		Process p = readyQueue.poll();
+		p.switchContext(ProcessState.active);
+		
+		//Find a ready CPU and give it the process
 		for(int i = 0; i < cpus.size(); i++)
 		{
-			
+			if (cpus.get(i).getProcess() == null)
+				cpus.get(i).addProcess(p);
 		}
+	}
+	
+	public void moveFromCPU(int pid)
+	{
+		//get the process that it's referencing from the process list
+		
 		
 		
 	}
