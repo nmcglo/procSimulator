@@ -26,14 +26,9 @@
  */
 
 
+
 import java.util.HashMap;
-import stateEnums.ProcessState;
-import static stateEnums.ProcessState.Active;
-import static stateEnums.ProcessState.CTXSwitch;
-import static stateEnums.ProcessState.IOWait;
-import static stateEnums.ProcessState.Idle;
-import static stateEnums.ProcessState.Terminated;
-import static stateEnums.ProcessState.UserWait;
+
 
 /**
  *
@@ -67,23 +62,24 @@ public abstract class AbstractProcess {
          
          
 
-    public AbstractProcess(int pid, boolean isInteractive,int burstValue, int priority,  int startTime ) {
+    public AbstractProcess(int pid, boolean isInteractive,int burstNums, int priority ) {
         this.pid = pid;
         this.isInteractive = isInteractive;
         this.cpuTimeNeeded = 0;
-        this.burstValue = burstValue;
+        this.burstNums = burstNums;
         this.priority = priority;
-        this.startTime = startTime;
-        this.pState = ProcessState.Idle;
+
+        this.pState = ProcessState.idle;
         //set up timing table:
                 timings = new HashMap<>(6);
         int it = 0;
-        timings.put(ProcessState.Idle, it);
-        timings.put(ProcessState.UserWait, it);
+       
+        timings.put(ProcessState.idle, it);
+        timings.put(ProcessState.active, it);
+        timings.put(ProcessState.contextSwitch, it);
+        timings.put(ProcessState.terminated, it);
+        timings.put(ProcessState.userWait, it);
         timings.put(ProcessState.IOWait, it);
-        timings.put(ProcessState.Active, it);
-        timings.put(ProcessState.Terminated, it);
-        timings.put(ProcessState.CTXSwitch, it);
     }
     public boolean isInteractive()
     {
@@ -99,20 +95,20 @@ public abstract class AbstractProcess {
     }
     //return timings (current process times):
       public int getActiveTime() {
-        return getTiming(Active);
+        return getTiming(ProcessState.active);
     }
    
     public int getIoWaitTime() {
-        return getTiming(IOWait);
+        return getTiming(ProcessState.IOWait);
     }
     public int getUserWaitTime() {
-        return getTiming(UserWait);
+        return getTiming(ProcessState.userWait);
     }
     public int getCtxSwitchTime() {
-        return getTiming(CTXSwitch);
+        return getTiming(ProcessState.contextSwitch);
     }
     public int getIdleTime() {
-        return getTiming(Idle);
+        return getTiming(ProcessState.idle);
     }
 
     
@@ -123,15 +119,7 @@ public abstract class AbstractProcess {
     public int getBurstValue() {
         return burstValue;
     }
-    //process remaining time(calculated values)
-    public abstract int getTotalWaitTime();
-    public abstract int remIoWait();
-    public abstract int remActiveTime();
-    public abstract int remUserWait();
-    
-    
-    
-    //Process stat methods
+       //Process stat methods
     public int getStartTime() {
         return startTime;
     }
@@ -142,10 +130,6 @@ public abstract class AbstractProcess {
     public int getPid() {
         return pid;
     }
-
-
-       
-
     
     
     @Override
@@ -158,6 +142,15 @@ public abstract class AbstractProcess {
     public void setState(ProcessState state){
         this.pState = state;
     }
+    //process remaining time(calculated values)
+    public abstract int getTotalWaitTime();
+    public abstract int remIoWait();
+    
+    public abstract int remUserWait();
+    
+    
+    
+ 
     //Abstract (need to implement) methods:
     
     abstract public void tick();
