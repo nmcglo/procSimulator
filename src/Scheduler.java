@@ -1,3 +1,6 @@
+import java.util.List;
+import java.util.Queue;
+
 /* 
  *  --- Operating Systems Homework 2 --- 
  * Copyright (c) 2014, Mark Plagge -- plaggm
@@ -24,6 +27,52 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-public class Scheduler {
+public class Scheduler 
+{
+	int numProgs;
+	int contextTimeSW;
+	int numP;
+	int RRTimeSlice;
+	String algorithmType;
+	int totalTimeSpent;
+	
+	
+	List<Process> allProcs()
+	{
+		
+		return null;
+	}
+	
+	Queue<Process> waiting()
+	{
+		
+		return null;
+	}
+	
+	List<CPU> cpus()
+	{
+		
+		return null;
+	}
+	
+	List<Process> userWait()
+	{
+		
+		return null;
+	}
+	
+	List<Process> IOWait()
+	{
+		
+		return null;
+	}
+	
+	List<Process> completeProcesses()
+	{
+		
+		return null;
+	}
+	
+	
 
 }
