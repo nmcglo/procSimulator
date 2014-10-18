@@ -40,7 +40,7 @@ public class CPUTuple {
         this.time = time;
         this.proc = null;
     }
-    public CPUTuple(int pid, int time, AbstractProcess p)
+    public CPUTuple(int pid, int time, Process p)
     {
         this.pid = pid;
         this.time = time;

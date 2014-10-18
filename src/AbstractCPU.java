@@ -29,23 +29,36 @@
 /**
  *
  * @author Mark Plagge -- plaggm
+ * @author Sean Daly -- dalys2
+ * 
  */
-public abstract class AbstractCPU {
-    AbstractProcess p;
-    int idleTime;
-    int CPUID;
-    
 
-    public int getIdleTime() {
-        return idleTime;
+public abstract class AbstractCPU {
+    private Process process;
+    private int idleTime;
+    private int usageTime;
+    private int CPUID;
+    
+    public AbstractCPU(int iTime, int uTime, int ID){
+    	process = null;
+    	idleTime = iTime;
+    	usageTime = uTime;
+    	CPUID = ID;
     }
     
     public boolean isIdle(){
-        return p != null;
+        return process != null;
     }
     
-    public  abstract void addProcess(AbstractProcess p);
-    public  abstract AbstractProcess rmProcess();
+    public  abstract void addProcess(Process p);
+    public	abstract Process getProcess();
+    public  abstract void rmProcess();
     public  abstract void tick();
+	public	abstract int getIdleTime();
+	public	abstract void setIdleTime(int idleTime);
+	public	abstract int getUsageTime();
+	public	abstract void setUsageTime(int usageTime);
+	public	abstract int getCPUID();
+	public	abstract void setCPUID(int cPUID);
     
 }

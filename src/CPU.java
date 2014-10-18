@@ -24,27 +24,66 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 public class CPU extends AbstractCPU{
-    CPUTuple cpuContents;
+	
+	private Process process;
+    private int idleTime;
+    private int usageTime;
+    private int CPUID;
+    
+    public CPU(int idleTime, int usageTime, int ID){
+    	super(idleTime, usageTime, ID);
+    }
+    
     @Override
-    public void addProcess(AbstractProcess p) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void addProcess(Process p) {
+        process = p;
     }
 
     @Override
-    public AbstractProcess rmProcess() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void rmProcess() {
+    	process = null;
     }
 
     @Override
     public void tick() {
-        if(cpuContents == null)
+        if(process == null)
             this.idleTime ++;
         else
-            cpuContents.proc.tick();
-        
+            this.usageTime++;
+    }
+    
+    public int getIdleTime() {
+       return idleTime;
+    }
+    
+    public boolean isIdle(){
+        return super.isIdle();
     }
 
+	public Process getProcess() {
+		return process;
+	}
 
+	public int getUsageTime() {
+		return usageTime;
+	}
 
+	public void setUsageTime(int usageTime) {
+		this.usageTime = usageTime;
+	}
+
+	public int getCPUID() {
+		return CPUID;
+	}
+
+	public void setCPUID(int cPUID) {
+		CPUID = cPUID;
+	}
+
+	public void setIdleTime(int idleTime) {
+		this.idleTime = idleTime;
+	}
+    
 }
