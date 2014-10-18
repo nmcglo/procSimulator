@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Random;
 import org.jruby.embed.ScriptingContainer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,7 +50,11 @@ public class Process extends AbstractProcess {
     public static void main(String[] args) {
         Process p = new Process(1, false, 1,2,3,4);
         p.tick();
-        System.out.println(p.getIdleTime());
+        p.switchContext(ProcessState.active);
+        while(p.remCurrentCPUTime() != 0)
+            p.tick();
+        System.out.println("Done");
+ 
     }
 
     private ScriptingContainer ruby;
@@ -59,8 +64,8 @@ public class Process extends AbstractProcess {
     final int ctxSwitchLagTime;
     
     //IO / User Wait remaining time values:
-    int ioWaitRem = 0;
-    int usrWaitRem = 0;
+    long ioWaitRem = 0;
+    long usrWaitRem = 0;
     
  
     /**
@@ -80,8 +85,10 @@ public class Process extends AbstractProcess {
         /* Due to dec. to not use Ruby here, I used a hashmap instead. Code left
         as a warning or tutorial on jruby integration. */
         createRuby(null);
-        hasRuby = false;
+        //hasRuby = false;
         this.ctxSwitchLagTime = ctxSwitchLagTime;
+        //And initiate the state of this machine:
+        this.switchContext(ProcessState.idle);
         
 
     }
@@ -93,7 +100,7 @@ public class Process extends AbstractProcess {
             if(hasRuby)
             {
                try {
-                this.cpuTimeNeeded =  (int) ((Invocable)jruby).invokeMethod(timingO, "getBurstTime");
+                this.cpuTimeNeeded = (long) ((Invocable)jruby).invokeMethod(timingO, "getBurstTime");
                    System.out.println("DEBUG - CPU TIME IS:" + this.cpuTimeNeeded);
             } catch (ScriptException | NoSuchMethodException ex) {
                 Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
@@ -105,18 +112,55 @@ public class Process extends AbstractProcess {
      * This handles that.
      */
     void generateWaitTime() {
-        
+        if(hasRuby)
+        {
+            int wt;
+            int rt;
+            try {
+                wt = (int) ((Invocable)jruby).invokeMethod(timingO, "getIOTime");
+                rt = (int) ((Invocable)jruby).invokeMethod(timingO, "getIntTime");
+            } catch (ScriptException | NoSuchMethodException ex) {
+                Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+                Random d = new Random();
+                wt = d.nextInt(2999) + 1000;
+                rt = d.nextInt(3199) + 1200;
+            }
+            
+            this.ioWaitRem  = wt;
+            this.usrWaitRem = rt;
+            if(isInteractive)
+                ioWaitRem = 0;
+            else
+                usrWaitRem = 0;
+            
+        }
     }
     
+    private void ctxOverhead()
+    {
+        stateTimeAdj(ProcessState.contextSwitch,ctxSwitchLagTime);
+        stateTimeAdj(0 - ctxSwitchLagTime);     
+    }
+
     private void switchToWait(){
         
             if(this.burstNums == 0){
             this.pState = ProcessState.terminated;
             }
             this.pState = this.isInteractive? ProcessState.userWait : ProcessState.IOWait;
-            stateTimeAdj(ProcessState.contextSwitch,ctxSwitchLagTime);
-            stateTimeAdj(-2);            
-      
+            //generate random times for the new process states and times and things:
+            generateWaitTime();
+            //add overhead (CTX SWITCH) to the new process state:
+            ctxOverhead();      
+    }
+    
+    private void switchToIdle(){
+        
+        //Not much to double check - just add the CTX switch time overhead and then
+        //migrate.
+        this.pState = ProcessState.idle;
+        this.generateCPUTime(); // create a CPU time for the process.
+        //is there a ctx switch for this?
     }
     
     /**
@@ -124,10 +168,23 @@ public class Process extends AbstractProcess {
      * It will manage CTX timings, as well as any sort of termination issues.
      * @param newContext 
      */
-    public void switchContext(ProcessState newContext)
+    public final void switchContext(ProcessState newContext)
     {
+        switch(newContext){
+            case idle: switchToIdle();
+                break;
+            case IOWait:
+            case userWait:
+                switchToWait();
+                
+                break;
+            default:
+                this.pState = newContext;
+        }
         
     }
+    
+    
    
     void stateChange(int val)
     {
@@ -153,7 +210,8 @@ public class Process extends AbstractProcess {
             URL url = getClass().getResource("processTimer.rb");
             File rbf = new File(url.getPath());
            
-            jruby = new ScriptEngineManager().getEngineByName("jruby");          
+            jruby = new ScriptEngineManager().getEngineByName("jruby");   
+            
            timingO = jruby.eval(new BufferedReader(new FileReader(rbf)));
            if(timings == null)
                ((Invocable)jruby).invokeMethod(timingO, "createDefault");
@@ -166,10 +224,14 @@ public class Process extends AbstractProcess {
             
         } catch (FileNotFoundException|NoSuchMethodException | ScriptException ex) {
             Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
-          //  hasRuby=false;
+            //hasRuby=false;
             //no ruby here.   
         }
     }
+    /**
+     * IsDone tells you if the process is done.
+     * @return -True if the process is terminated.
+     */
     @Override
     public boolean isDone() {
         return (burstValue + burstNums) == 0;
@@ -183,16 +245,37 @@ public class Process extends AbstractProcess {
      */
     @Override
     public void tick() {
+        if(isDone()) {
+            return;
+        } 
+        
         if(hasRuby)
-           try {
-               ticr(pState.toString());
-        } catch (Exception ex) {
-            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
-            hasRuby = false;
-            timings.replace(pState, timings.get(pState) + 1);
+        {
+                try {
+                    ticr(pState.toString()); // increment our times
+
+             } catch (ScriptException | NoSuchMethodException ex) {
+                 Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+                 hasRuby = false;
+                 //timings.replace(pState, timings.get(pState) + 1);
+                 //TODO: add some non-ruby dependant alternatives to the try statement,
+                 //or die.
+             }
+
+             //next, see if we need to move out of our current context:
+             if(ttlWaitRem() == 0 && (pState == ProcessState.userWait|| pState == ProcessState.IOWait ))
+             {
+                       //initiate a change to the idle state.
+                 switchToIdle();
+             }
+             if(remCurrentCPUTime() == 0 && (pState== ProcessState.active))
+             {
+                 switchToWait();
+             }
         }
-        else
-        timings.replace(pState, timings.get(pState) + 1);
+        stateTimeAdj(1);    
+        
+        
     }
     /**
      * adjusts the process' current time, for the current context.
@@ -230,7 +313,7 @@ public class Process extends AbstractProcess {
      * @return 
      */
     @Override
-    public int getTiming(ProcessState stq){
+    public long getTiming(ProcessState stq){
         if(hasRuby)
             try {
                 return (getTr(stq.toString()));
@@ -246,24 +329,38 @@ public class Process extends AbstractProcess {
  
     }
     @Override
-    public int getTotalWaitTime() {
+    public long getTotalWaitTime() {
         return getTiming(ProcessState.IOWait) + getTiming(ProcessState.userWait)
                 + getTiming(ProcessState.contextSwitch) +getTiming(ProcessState.idle) ;
     }
 
     @Override
-    public int remIoWait() {
-        return ioWaitRem;
+     long remIoWait() {
+
+            return ioWaitRem;
     }
 
-    
-    public int remCurrentCPUTime() {
+    /**
+     * Gives the remaining time in MS for this CPU's burst speed.
+     * @return CPU TIME NEEDED TO FINISH PROCESS
+     */
+    public long remCurrentCPUTime() {
+       
+        try {
+            
+            long x = (long)((Invocable)jruby).invokeMethod(timingO, "getCBurst");
+            return  x;
+        } catch (ScriptException | NoSuchMethodException ex) {
+            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+            
         return burstValue;
     }
     
 
     @Override
-    public int remUserWait() {
+     long remUserWait() {
         return usrWaitRem;
     }
     
@@ -271,8 +368,18 @@ public class Process extends AbstractProcess {
      * Total remaining wait time in this context. Automatically handles the 
      * system 
      * @return 
+     * @throws javax.script.ScriptException 
+     * @throws java.lang.NoSuchMethodException 
      */
-    public int ttlWaitRem() {
+    public long ttlWaitRem() {
+        if(hasRuby)
+           try {
+               return (long) ((Invocable)jruby).invokeMethod(timingO, "getCWait");
+        } catch (ScriptException | NoSuchMethodException ex) {
+            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
         return remUserWait() + remIoWait();
     }
     
