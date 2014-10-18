@@ -29,60 +29,138 @@ import java.util.Queue;
  */
 public class Scheduler 
 {
-	int numProgs;
-	int contextSwitchTime;
-	int numP;
-	int RRTimeSlice;
-	String algorithmType;
-	int totalTimeSpent;
+	private int numProcs;
+	private int numCPUs;
+	private int contextSwitchTime;
+	private int RRTimeSlice;
+	private AlgorithmType algorithmType;
+	private int totalTimeSpent;
 	
-	public Scheduler(String atype)
+	private List<Process> allProcesses;
+	private List<CPU> cpus;
+	private Queue<Process> readyQueue;
+	private Queue<Process> waitQueue; //IOWAIT AND USERWAIT
+	
+	
+	public Scheduler(AlgorithmType atype)
 	{
-		this.numProgs = 0;
+		this.numProcs = 0;
 		this.contextSwitchTime = 0;
-		this.numP = 0;
 		this.RRTimeSlice = 0;
 		this.algorithmType = atype;
 		this.totalTimeSpent = 0;
 	}
 	
-	
-	
-	public List<Process> allProcs()
-	{
-		
-		return null;
+	//GETTERS AND SETTERS****************************************************************
+	public int getNumProcs() {
+		return numProcs;
+	}
+
+	public void setNumProcs(int numProgs) {
+		this.numProcs = numProgs;
+	}
+
+	public int getContextSwitchTime() {
+		return contextSwitchTime;
+	}
+
+	public void setContextSwitchTime(int contextSwitchTime) {
+		this.contextSwitchTime = contextSwitchTime;
+	}
+
+	public int getRRTimeSlice() {
+		return RRTimeSlice;
+	}
+
+	public void setRRTimeSlice(int rRTimeSlice) {
+		RRTimeSlice = rRTimeSlice;
+	}
+
+	public int getTotalTimeSpent() {
+		return totalTimeSpent;
+	}
+
+	public void setTotalTimeSpent(int totalTimeSpent) {
+		this.totalTimeSpent = totalTimeSpent;
 	}
 	
-	public Queue<Process> waiting()
-	{
-		
-		return null;
+	public AlgorithmType getAlgorithmType() {
+		return algorithmType;
+	}
+
+	public void setAlgorithmType(AlgorithmType algorithmType) {
+		this.algorithmType = algorithmType;
+	}
+
+	public List<Process> getAllProcesses() {
+		return allProcesses;
+	}
+
+	public void setAllProcesses(List<Process> allProcesses) {
+		this.allProcesses = allProcesses;
+	}
+
+	public List<CPU> getCpus() {
+		return cpus;
+	}
+
+	public void setCpus(List<CPU> cpus) {
+		this.cpus = cpus;
+	}
+
+	public Queue<Process> getReadyQueue() {
+		return readyQueue;
+	}
+
+	public void setReadyQueue(Queue<Process> readyQueue) {
+		this.readyQueue = readyQueue;
+	}
+
+	public Queue<Process> getWaitQueue() {
+		return waitQueue;
+	}
+
+	public void setWaitQueue(Queue<Process> waitQueue) {
+		this.waitQueue = waitQueue;
 	}
 	
-	public List<CPU> cpus()
+	public int getNumCPUs() {
+		return numCPUs;
+	}
+
+	public void setNumCPUs(int numCPUs) {
+		this.numCPUs = numCPUs;
+	}
+
+	
+	
+	//BEGIN OTHER METHODS*****************************************************
+	public void addProcess(Process p)
 	{
-		
-		return null;
+		this.numProcs++;
+		this.allProcesses.add(p);
+		this.readyQueue.add(p);
 	}
 	
-	public List<Process> userWait()
+	public void addCPU(CPU cpu)
 	{
-		
-		return null;
+		this.numCPUs++;
+		this.cpus.add(cpu);
 	}
 	
-	public List<Process> IOWait()
+	public void moveToCPU(int pid)
 	{
+		//Find a ready CPU
+		for(int i = 0; i < cpus.size(); i++)
+		{
+			
+		}
 		
-		return null;
+		
 	}
 	
-	public List<Process> completeProcesses()
-	{
-		
-		return null;
-	}
+	
+	
 	
 	
 
