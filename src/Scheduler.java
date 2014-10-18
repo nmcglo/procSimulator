@@ -30,44 +30,55 @@ import java.util.Queue;
 public class Scheduler 
 {
 	int numProgs;
-	int contextTimeSW;
+	int contextSwitchTime;
 	int numP;
 	int RRTimeSlice;
 	String algorithmType;
 	int totalTimeSpent;
 	
+	public Scheduler(String atype)
+	{
+		this.numProgs = 0;
+		this.contextSwitchTime = 0;
+		this.numP = 0;
+		this.RRTimeSlice = 0;
+		this.algorithmType = atype;
+		this.totalTimeSpent = 0;
+	}
 	
-	List<Process> allProcs()
+	
+	
+	public List<Process> allProcs()
 	{
 		
 		return null;
 	}
 	
-	Queue<Process> waiting()
+	public Queue<Process> waiting()
 	{
 		
 		return null;
 	}
 	
-	List<CPU> cpus()
+	public List<CPU> cpus()
 	{
 		
 		return null;
 	}
 	
-	List<Process> userWait()
+	public List<Process> userWait()
 	{
 		
 		return null;
 	}
 	
-	List<Process> IOWait()
+	public List<Process> IOWait()
 	{
 		
 		return null;
 	}
 	
-	List<Process> completeProcesses()
+	public List<Process> completeProcesses()
 	{
 		
 		return null;
