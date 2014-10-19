@@ -1,1 +1,13 @@
 /bin/
+/dist/
+*.class
+
+*.class
+
+build/classes/Process.class
+
+build/classes/Process.class
+
+build/classes/CPUTuple.class
+
+build/classes/Scheduler.class
