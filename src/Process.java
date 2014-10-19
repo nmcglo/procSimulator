@@ -28,13 +28,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
@@ -42,46 +39,47 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import org.jruby.embed.ScriptingContainer;
+
 /**
- * Process represents a process running in the simulation. 
- * When created, the process will be in an idle state. 
- * When switchContext is called, moving the process to active, one burstnum is removed.
- * If burstnums are zero and the burstTime is zero, the process will auto-switch to terminated. THIS ADDS CONTEXT SWITCH TIME as of now.
- * The process will auto-switch to a wait time if the process time is done, adding context switch overhead.
- * Further ticks will remove time waiting for the user. Once those run out, the process will self-switch to idle (waiT)
- * 
+ * Process represents a process running in the simulation. When created, the
+ * process will be in an idle state. When switchContext is called, moving the
+ * process to active, one burstnum is removed. If burstnums are zero and the
+ * burstTime is zero, the process will auto-switch to terminated. THIS ADDS
+ * CONTEXT SWITCH TIME as of now. The process will auto-switch to a wait time if
+ * the process time is done, adding context switch overhead. Further ticks will
+ * remove time waiting for the user. Once those run out, the process will
+ * self-switch to idle (waiT)
+ *
  * @author Mark Plagge -- plaggm
  */
 public class Process extends AbstractProcess {
 
     public static void runner(Process p) {
         int counter = 0;
-   
-        
+
         p.tick(); //an idle tick to test the idle ticker.
         p.switchContext(ProcessState.active);
-        while(p.isDone() == false)
-        {
+        while (p.isDone() == false) {
             //CPU TIME.
             while (p.remCurrentCPUTime() != 0) {
-                p.tick();
                 
+
+                p.tick();
+
                 counter++;
             }
             //WAIT TIME:
-              System.out.println(p.getCurrentState());
-            while(!p.isWaiting())
-            {
+            System.out.println(p.getCurrentState());
+            while (p.isWaiting()) {
                 p.tick();
             }
             System.out.println("Burst Times Left: " + p.remBurstTimes());
             System.out.println("is done? " + p.isDone());
-          
+
             p.switchContext(ProcessState.active);
             System.out.println("is done? " + p.isDone());
         }
 
-       
         System.out.println("Done");
         System.out.println(counter);
         System.out.println(p.toString());
@@ -98,9 +96,8 @@ public class Process extends AbstractProcess {
                 + p.getCtxSwitchTime());
         System.out.println("--- Rem Burts: " + p.remCurrentCPUTime());
         System.out.println("--- IS DONE: " + p.isDone());
-
+   
     }
-
 
     private ScriptingContainer ruby;
     boolean hasRuby;
@@ -133,27 +130,25 @@ public class Process extends AbstractProcess {
         //And initiate the state of this machine:
         this.switchContext(ProcessState.idle);
 
-
     }
 
     /**
      * When entering the READY/IDLE queue, we have to set a random CPU time.
      * This handles that.
      */
-
     void generateCPUTime() {
-        
-        /*
-        if (hasRuby) {
-            try {
-                this.burstValue = (long) ((Invocable) jruby).invokeMethod(receiver, "getBurstTime");
-               
-                  // ((Invocable)jruby).invokeMethod(receiver,"setNewBurst");
 
-            } catch (ScriptException | NoSuchMethodException ex) {
-                Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }*/
+        /*
+         if (hasRuby) {
+         try {
+         this.burstValue = (long) ((Invocable) jruby).invokeMethod(receiver, "getBurstTime");
+               
+         // ((Invocable)jruby).invokeMethod(receiver,"setNewBurst");
+
+         } catch (ScriptException | NoSuchMethodException ex) {
+         Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         }*/
         //alarm
         this.burstValue = 1;
     }
@@ -206,7 +201,7 @@ public class Process extends AbstractProcess {
 
         //Not much to double check - just add the CTX switch time overhead and then
         //migrate.
-        burstNums --; // we will have one fewer burst times
+        burstNums--; // we will have one fewer burst times
         this.pState = ProcessState.idle;
         this.generateCPUTime(); // create a CPU time for the process.
         //is there a ctx switch for this?
@@ -218,20 +213,27 @@ public class Process extends AbstractProcess {
         if (isDone()) {
             this.pState = ProcessState.terminated;
         } else {
-            
+
             this.pState = ProcessState.active;
         }
     }
-
+    void switchToTerminated()
+    {
+        ctxOverhead();
+        this.ioWaitRem = 0;
+        this.usrWaitRem = 0;
+        this.pState = ProcessState.terminated;
+        
+    }
     /**
      * switchContext changes the current context of this process to the new one
      * specified in the parameter. It will manage CTX timings, as well as any
      * sort of termination issues.
      *
      * @param newContext
+     * @return a copy of the process.
      */
-
-    public final void switchContext(ProcessState newContext) {
+    public final Process switchContext(ProcessState newContext) {
         switch (newContext) {
             case idle:
                 switchToIdle();
@@ -241,12 +243,15 @@ public class Process extends AbstractProcess {
                 switchToWait();
                 break;
             case active:
-                switchToActive();          
+                switchToActive();
+                break;
+            case terminated:
+                switchToTerminated();
                 break;
             default:
                 this.pState = newContext;
         }
-
+        return this;
 
     }
 
@@ -275,7 +280,6 @@ public class Process extends AbstractProcess {
             jruby = new ScriptEngineManager().getEngineByName("jruby");
             receiver = jruby.eval(new BufferedReader(new FileReader(rbf)));
 
-
             if (timings == null) {
                 ((Invocable) jruby).invokeMethod(receiver, "createDefault");
             } else {
@@ -291,7 +295,6 @@ public class Process extends AbstractProcess {
             //no ruby here.   
         }
     }
-
 
     /**
      * IsDone tells you if the process is done.
@@ -312,12 +315,17 @@ public class Process extends AbstractProcess {
      */
     @Override
     public void tick() {
-
+        if(pState == ProcessState.terminated)
+            return;
+        
         if (isDone()) {
+            if(this.isInteractive)
+            {
+                this.burstNums ++;
+            }
             this.switchContext(ProcessState.terminated);
             return;
-        }
-        else {
+        } else {
             if (hasRuby) {
                 try {
                     ticr(pState.toString()); // increment our times
@@ -329,7 +337,7 @@ public class Process extends AbstractProcess {
                     //or die.
                 }
             }
-             switch (pState) {
+            switch (pState) {
                 case active:
                     this.burstValue--;
                     break;
@@ -342,30 +350,26 @@ public class Process extends AbstractProcess {
             }
                 //next, see if we need to move out of our current context:
             //if the cpu time out, we switch to a wait speech
-            
-            if(burstValue == 0 && pState == ProcessState.active)
-            {
-                if(burstValue == 0 && burstNums == 0)
+
+            if (burstValue == 0 && pState == ProcessState.active) {
+                if (burstValue == 0 && burstNums == 0) {
                     this.pState = ProcessState.terminated;
+                }
                 //switch to waiting!
                 switchToWait(); //should add some wait time, and then switch context.
-                
-            }
-            else if (ttlWaitRem() == 0 && (pState == ProcessState.userWait || pState == ProcessState.IOWait)) {
+
+            } else if (ttlWaitRem() == 0 && (pState == ProcessState.userWait || pState == ProcessState.IOWait)) {
                 //initiate a change to the idle state.
-                switchContext(ProcessState.idle);
-                
+                switchToIdle();
+
             }
             //switch to idle
-           
-            }
-        
-            //stateTimeAdj(1);    
-            //and update our remaning burst/wait times:
-           
+
         }
 
-    
+            //stateTimeAdj(1);    
+        //and update our remaning burst/wait times:
+    }
 
     /**
      * adjusts the process' current time, for the current context.
@@ -379,8 +383,7 @@ public class Process extends AbstractProcess {
     /**
      * adjusts the process' current time, for an arbitrary context.
      *
-     * @param p <- string name of the state @param value <-valu
-     * e to adjust
+     * @param p <- string name of the state @param value <-valu e to adjust
      */
     void stateTimeAdj(String p, Integer value) {
         ProcessState ps = ProcessState.valueOf(p);
@@ -391,8 +394,7 @@ public class Process extends AbstractProcess {
     /**
      * adjusts the process' current time, for an arbitrary context.
      *
-     * @param p <- a processState to change. @param value <-value
-     * to adjust
+     * @param p <- a processState to change. @param value <-value to adjust
      */
     void stateTimeAdj(ProcessState p, Integer value) {
         try {
@@ -419,7 +421,6 @@ public class Process extends AbstractProcess {
      * @param stq The processState you are interested in.
      * @return
      */
-
     @Override
     public long getTiming(ProcessState stq) {
         if (hasRuby) {
@@ -444,11 +445,9 @@ public class Process extends AbstractProcess {
     }
 
     @Override
-     long remIoWait() {
-
+    long remIoWait() {
 
         return ioWaitRem;
-
 
     }
 
@@ -457,26 +456,25 @@ public class Process extends AbstractProcess {
      *
      * @return CPU TIME NEEDED TO FINISH PROCESS
      */
-     public long remCurrentCPUTime() {      
+    public long remCurrentCPUTime() {
 
         return burstValue;
     }
 
     @Override
-     long remUserWait() {
+    long remUserWait() {
         return usrWaitRem;
     }
 
     /**
-
+     *
      * Total remaining wait time in this context. Automatically handles the
      * system
      *
      * @return
-
+     *
      */
     public long ttlWaitRem() {
-
 
         return remUserWait() + remIoWait();
     }
@@ -492,7 +490,8 @@ public class Process extends AbstractProcess {
 
     /**
      * total time this process has been running (CPU bound)
-     * @return 
+     *
+     * @return
      */
     public long totalActiveTime() {
         return getTiming(ProcessState.active);
@@ -500,30 +499,34 @@ public class Process extends AbstractProcess {
 
     /**
      * total time this process has been idle (ready/wait)
-     * @return 
+     *
+     * @return
      */
     public long totalIdleTime() {
 
         return getTiming(ProcessState.idle);
     }
+
     /**
      * The total time this process has been waiting on user or IO.
-     * @return 
+     *
+     * @return
      */
     public long totalWaitTime() {
         return getTotalWaitTime();
     }
-    
+
     public boolean isWaiting() {
         return (remIoWait() + remUserWait()) != 0;
     }
 
-    public ProcessState getCurrentState(){
-            return this.pState;
-}
+    public ProcessState getCurrentState() {
+        return this.pState;
+    }
 
     @Override
     public long getTiming(String t) {
         return getTiming(ProcessState.valueOf(t));
     }
 }
+///final
