@@ -39,10 +39,10 @@ public abstract class AbstractCPU {
     private int usageTime;
     private int CPUID;
     
-    public AbstractCPU(int iTime, int uTime, int ID){
+    public AbstractCPU(int ID){
     	process = null;
-    	idleTime = iTime;
-    	usageTime = uTime;
+    	idleTime = 0;
+    	usageTime = 0;
     	CPUID = ID;
     }
     
