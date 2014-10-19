@@ -1,5 +1,6 @@
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
+import java.util.PriorityQueue;
 
 /* 
  *  --- Operating Systems Homework 2 --- 
@@ -36,10 +37,8 @@ public class Scheduler
 	private AlgorithmType algorithmType;
 	private int totalTimeSpent;
 	
-	private List<Process> allProcesses;
-	private List<CPU> cpus;
-	private Queue<Process> readyQueue;
-	private Queue<Process> waitQueue; //IOWAIT AND USERWAIT
+	private ArrayList<Process> allProcesses;
+	private ArrayList<CPU> cpus;
 	
 	
 	public Scheduler(AlgorithmType atype)
@@ -96,7 +95,7 @@ public class Scheduler
 		return allProcesses;
 	}
 
-	public void setAllProcesses(List<Process> allProcesses) {
+	public void setAllProcesses(ArrayList<Process> allProcesses) {
 		this.allProcesses = allProcesses;
 	}
 
@@ -104,24 +103,8 @@ public class Scheduler
 		return cpus;
 	}
 
-	public void setCpus(List<CPU> cpus) {
+	public void setCpus(ArrayList<CPU> cpus) {
 		this.cpus = cpus;
-	}
-
-	public Queue<Process> getReadyQueue() {
-		return readyQueue;
-	}
-
-	public void setReadyQueue(Queue<Process> readyQueue) {
-		this.readyQueue = readyQueue;
-	}
-
-	public Queue<Process> getWaitQueue() {
-		return waitQueue;
-	}
-
-	public void setWaitQueue(Queue<Process> waitQueue) {
-		this.waitQueue = waitQueue;
 	}
 	
 	public int getNumCPUs() {
@@ -137,9 +120,9 @@ public class Scheduler
 	//BEGIN OTHER METHODS*****************************************************
 	public void addNewProcess(Process p)
 	{
+		p.setState(ProcessState.idle);
 		this.numProcs++;
 		this.allProcesses.add(p);
-		this.readyQueue.add(p);
 	}
 	
 	public void addCPU(CPU cpu)
@@ -148,9 +131,8 @@ public class Scheduler
 		this.cpus.add(cpu);
 	}
 	
-	public void moveToCPU()
+	public void moveToCPU(Process p)
 	{
-		Process p = readyQueue.poll();
 		p.switchContext(ProcessState.active);
 		
 		//Find a ready CPU and give it the process
@@ -161,13 +143,91 @@ public class Scheduler
 		}
 	}
 	
-	public void moveFromCPU(int pid)
+	public void moveFromCPUtoWait(Process p)
 	{
+		
 		//get the process that it's referencing from the process list
-		
-		
+		for(int i = 0; i < allProcesses.size(); i++)
+		{
+			if (allProcesses.get(i).pid == p.pid)
+				p = allProcesses.get(i);	
+		}
+	}
+	
+	
+	
+	public void runSearchAlgorithm()
+	{
+		switch (algorithmType)
+		{
+		case SJF:
+			runShortestJobFirst();
+			break;
+		case SJFE:
+			runShortestJobFirstPreemption();
+			break;
+		case RR:
+			runRoundRobin();
+			break;
+		case PP:
+			runPreemptivePriority();
+			break;
+		}
 		
 	}
+	
+	public void runShortestJobFirst()
+	{
+		SJFComparator sfjComparator = new SJFComparator();
+		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
+		for (int i = 0; i < allProcesses.size(); i++)
+		{
+			if (allProcesses.get(i).pState == ProcessState.idle)
+			{
+				readyQueue.add(allProcesses.get(i));
+			}	
+		}
+	}
+	
+	public void runShortestJobFirstPreemption()
+	{
+		SJFComparator sfjComparator = new SJFComparator();
+		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
+		for (int i = 0; i < allProcesses.size(); i++)
+		{
+			if (allProcesses.get(i).pState == ProcessState.idle)
+			{
+				readyQueue.add(allProcesses.get(i));
+			}	
+		}	
+	}
+	
+	public void runRoundRobin()
+	{
+		ArrayList<Process> readyQueue = new ArrayList<Process>();
+		//No priority needed
+		for (int i = 0; i < allProcesses.size(); i++)
+		{
+			if (allProcesses.get(i).pState == ProcessState.idle)
+			{
+				readyQueue.add(allProcesses.get(i));
+			}
+		}
+	}
+	
+	public void runPreemptivePriority()
+	{
+		PriorityComparator pComparator = new PriorityComparator();
+		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(pComparator);
+		for (int i = 0; i < allProcesses.size(); i++)
+		{
+			if (allProcesses.get(i).pState == ProcessState.idle)
+			{
+				readyQueue.add(allProcesses.get(i));
+			}	
+		}
+	}
+	
 	
 	
 	
