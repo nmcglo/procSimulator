@@ -45,7 +45,7 @@ import javax.script.ScriptException;
  
 
 
-public class Process extends AbstractProcess {
+public class Process extends AbstractProcess  {
 
     public static void main(String[] args) {
         Process p = new Process(1, false, 1,2,3,4);
@@ -372,16 +372,14 @@ public class Process extends AbstractProcess {
      * @throws java.lang.NoSuchMethodException 
      */
     public long ttlWaitRem() {
-        if(hasRuby)
-           try {
-               return (long) ((Invocable)jruby).invokeMethod(timingO, "getCWait");
-        } catch (ScriptException | NoSuchMethodException ex) {
-            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
-        }
         
         
         return remUserWait() + remIoWait();
     }
-    
+    public void preempt()
+    {
+        this.pState = ProcessState.idle;
+        this.ctxOverhead();
+    }
     
 }       
