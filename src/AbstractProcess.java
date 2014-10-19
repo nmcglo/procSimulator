@@ -35,21 +35,25 @@ import java.util.HashMap;
  * @author Mark
  */
 public abstract class AbstractProcess {
-    int pid;
+    long pid;
     boolean isInteractive;
-    int cpuTimeNeeded;
+<<<<<<< HEAD
+
+=======
+    long cpuTimeNeeded;
+>>>>>>> FETCH_HEAD
     
     //Initial values (set via constructor)
-    int vWait;
-    int ioWait;
+    long vWait;
+    long ioWait;
     /** burstValue is the total CPU time needed. **/
-    int burstValue;
+    long burstValue;
     /** burstNums is the number of CPU burst times left **/
-    int burstNums;
-    int priority;
-    int userWait;
+    long burstNums;
+    long priority;
+    long userWait;
     
-    int startTime;
+    long startTime;
     //Calculated Values (xxxTime is time spent in a state)
 
     ProcessState pState;
@@ -65,7 +69,7 @@ public abstract class AbstractProcess {
     public AbstractProcess(int pid, boolean isInteractive,int burstNums, int priority ) {
         this.pid = pid;
         this.isInteractive = isInteractive;
-        this.cpuTimeNeeded = 0;
+       
         this.burstNums = burstNums;
         this.priority = priority;
 
@@ -86,48 +90,54 @@ public abstract class AbstractProcess {
         return this.isInteractive;  
     }
     //Timing getter:
-    public int getTiming(ProcessState stq){
+<<<<<<< HEAD
+    public abstract long getTiming(String t);
+    
+
+=======
+    public long getTiming(ProcessState stq){
         return timings.get(stq);
     } 
-    public int getTiming(String sq) {
+    public long getTiming(String sq) {
         return getTiming(ProcessState.valueOf(sq));
+>>>>>>> FETCH_HEAD
         
-    }
+    public abstract long getTiming(ProcessState stq);
     //return timings (current process times):
-      public int getActiveTime() {
+      public long getActiveTime() {
         return getTiming(ProcessState.active);
     }
    
-    public int getIoWaitTime() {
+    public long getIoWaitTime() {
         return getTiming(ProcessState.IOWait);
     }
-    public int getUserWaitTime() {
+    public long getUserWaitTime() {
         return getTiming(ProcessState.userWait);
     }
-    public int getCtxSwitchTime() {
+    public long getCtxSwitchTime() {
         return getTiming(ProcessState.contextSwitch);
     }
-    public int getIdleTime() {
+    public long getIdleTime() {
         return getTiming(ProcessState.idle);
     }
 
     
-    public int getRemainingBursts()
+    public long getRemainingBursts()
     {
         return this.burstValue;
     }
-    public int getBurstValue() {
+    public long getBurstValue() {
         return burstValue;
     }
        //Process stat methods
-    public int getStartTime() {
+    public long getStartTime() {
         return startTime;
     }
 
-    public int getPriority() {
+    public long getPriority() {
         return priority;
     }
-    public int getPid() {
+    public long getPid() {
         return pid;
     }
     
@@ -143,14 +153,17 @@ public abstract class AbstractProcess {
         this.pState = state;
     }
     //process remaining time(calculated values)
-    public abstract int getTotalWaitTime();
-    public abstract int remIoWait();
+    public abstract long getTotalWaitTime();
+     abstract long remIoWait();
+<<<<<<< HEAD
+=======
     
-    public abstract int remUserWait();
+     abstract long remUserWait();
     
     
+>>>>>>> FETCH_HEAD
     
- 
+     abstract long remUserWait();
     //Abstract (need to implement) methods:
     
     abstract public void tick();
