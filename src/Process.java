@@ -231,8 +231,9 @@ public class Process extends AbstractProcess {
      * sort of termination issues.
      *
      * @param newContext
+     * @return a copy of the process.
      */
-    public final void switchContext(ProcessState newContext) {
+    public final Process switchContext(ProcessState newContext) {
         switch (newContext) {
             case idle:
                 switchToIdle();
@@ -250,6 +251,7 @@ public class Process extends AbstractProcess {
             default:
                 this.pState = newContext;
         }
+        return this;
 
     }
 
