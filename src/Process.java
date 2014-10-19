@@ -35,6 +35,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
+<<<<<<< HEAD
+=======
+import org.jruby.embed.ScriptingContainer;
+>>>>>>> FETCH_HEAD
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
@@ -101,9 +105,20 @@ public class Process extends AbstractProcess {
 
     }
 
+<<<<<<< HEAD
     static String readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         return new String(encoded, encoding);
+=======
+    public static void main(String[] args) {
+        Process p = new Process(1, false, 1,2,3,4);
+        p.tick();
+        p.switchContext(ProcessState.active);
+        while(p.remCurrentCPUTime() != 0)
+            p.tick();
+        System.out.println("Done");
+ 
+>>>>>>> FETCH_HEAD
     }
 
     private ScriptingContainer ruby;
@@ -115,7 +130,12 @@ public class Process extends AbstractProcess {
     //IO / User Wait remaining time values:
     long ioWaitRem = 0;
     long usrWaitRem = 0;
+<<<<<<< HEAD
 
+=======
+    
+ 
+>>>>>>> FETCH_HEAD
     /**
      *
      * @param pid -- Process ID
@@ -136,6 +156,10 @@ public class Process extends AbstractProcess {
         this.ctxSwitchLagTime = ctxSwitchLagTime;
         //And initiate the state of this machine:
         this.switchContext(ProcessState.idle);
+<<<<<<< HEAD
+=======
+        
+>>>>>>> FETCH_HEAD
 
     }
 
@@ -143,6 +167,7 @@ public class Process extends AbstractProcess {
      * When entering the READY/IDLE queue, we have to set a random CPU time.
      * This handles that.
      */
+<<<<<<< HEAD
     void generateCPUTime() {
         
         /*
@@ -152,6 +177,14 @@ public class Process extends AbstractProcess {
                
                   // ((Invocable)jruby).invokeMethod(receiver,"setNewBurst");
 
+=======
+    void generateCPUTime(){
+            if(hasRuby)
+            {
+               try {
+                this.cpuTimeNeeded = (long) ((Invocable)jruby).invokeMethod(timingO, "getBurstTime");
+                   System.out.println("DEBUG - CPU TIME IS:" + this.cpuTimeNeeded);
+>>>>>>> FETCH_HEAD
             } catch (ScriptException | NoSuchMethodException ex) {
                 Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -165,6 +198,7 @@ public class Process extends AbstractProcess {
      * handles that.
      */
     void generateWaitTime() {
+<<<<<<< HEAD
 
         Random d = new Random();
         long wt = d.nextInt(2999) + 1000;
@@ -201,6 +235,57 @@ public class Process extends AbstractProcess {
         generateWaitTime();
         //add overhead (CTX SWITCH) to the new process state:
         ctxOverhead();
+=======
+        if(hasRuby)
+        {
+            int wt;
+            int rt;
+            try {
+                wt = (int) ((Invocable)jruby).invokeMethod(timingO, "getIOTime");
+                rt = (int) ((Invocable)jruby).invokeMethod(timingO, "getIntTime");
+            } catch (ScriptException | NoSuchMethodException ex) {
+                Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+                Random d = new Random();
+                wt = d.nextInt(2999) + 1000;
+                rt = d.nextInt(3199) + 1200;
+            }
+            
+            this.ioWaitRem  = wt;
+            this.usrWaitRem = rt;
+            if(isInteractive)
+                ioWaitRem = 0;
+            else
+                usrWaitRem = 0;
+            
+        }
+    }
+    
+    private void ctxOverhead()
+    {
+        stateTimeAdj(ProcessState.contextSwitch,ctxSwitchLagTime);
+        stateTimeAdj(0 - ctxSwitchLagTime);     
+    }
+
+    private void switchToWait(){
+        
+            if(this.burstNums == 0){
+            this.pState = ProcessState.terminated;
+            }
+            this.pState = this.isInteractive? ProcessState.userWait : ProcessState.IOWait;
+            //generate random times for the new process states and times and things:
+            generateWaitTime();
+            //add overhead (CTX SWITCH) to the new process state:
+            ctxOverhead();      
+    }
+    
+    private void switchToIdle(){
+        
+        //Not much to double check - just add the CTX switch time overhead and then
+        //migrate.
+        this.pState = ProcessState.idle;
+        this.generateCPUTime(); // create a CPU time for the process.
+        //is there a ctx switch for this?
+>>>>>>> FETCH_HEAD
     }
 
     private void switchToIdle() {
@@ -231,27 +316,49 @@ public class Process extends AbstractProcess {
      *
      * @param newContext
      */
+<<<<<<< HEAD
     public final void switchContext(ProcessState newContext) {
         switch (newContext) {
             case idle:
                 switchToIdle();
+=======
+    public final void switchContext(ProcessState newContext)
+    {
+        switch(newContext){
+            case idle: switchToIdle();
+>>>>>>> FETCH_HEAD
                 break;
             case IOWait:
             case userWait:
                 switchToWait();
+<<<<<<< HEAD
 
                 break;
             case active:
                 switchToActive();
+=======
+                
+>>>>>>> FETCH_HEAD
                 break;
             default:
                 this.pState = newContext;
         }
+<<<<<<< HEAD
 
     }
 
     void stateChange(int val) {
 
+=======
+        
+    }
+    
+    
+   
+    void stateChange(int val)
+    {
+        
+>>>>>>> FETCH_HEAD
     }
 
     public void ticr(String itm) throws ScriptException, NoSuchMethodException {
@@ -271,9 +378,23 @@ public class Process extends AbstractProcess {
             System.setProperty("org.jruby.embed.localvariable.behavior", "persistant");
             URL url = getClass().getResource("processTimer.rb");
             File rbf = new File(url.getPath());
+<<<<<<< HEAD
             System.out.println(url);
             jruby = new ScriptEngineManager().getEngineByName("jruby");
             receiver = jruby.eval(new BufferedReader(new FileReader(rbf)));
+=======
+           
+            jruby = new ScriptEngineManager().getEngineByName("jruby");   
+            
+           timingO = jruby.eval(new BufferedReader(new FileReader(rbf)));
+           if(timings == null)
+               ((Invocable)jruby).invokeMethod(timingO, "createDefault");
+           else
+           {
+               jruby.put("$tList", timings.toArray());
+               ((Invocable)jruby).invokeMethod(timingO,"createCustomInt");
+           }
+>>>>>>> FETCH_HEAD
 
             if (timings == null) {
                 ((Invocable) jruby).invokeMethod(receiver, "createDefault");
@@ -290,10 +411,15 @@ public class Process extends AbstractProcess {
             //no ruby here.   
         }
     }
+<<<<<<< HEAD
 
     /**
      * IsDone tells you if the process is done.
      *
+=======
+    /**
+     * IsDone tells you if the process is done.
+>>>>>>> FETCH_HEAD
      * @return -True if the process is terminated.
      */
     @Override
@@ -310,6 +436,7 @@ public class Process extends AbstractProcess {
      */
     @Override
     public void tick() {
+<<<<<<< HEAD
         if (isDone()) {
             this.switchContext(ProcessState.terminated);
             return;
@@ -364,6 +491,40 @@ public class Process extends AbstractProcess {
 
     
 
+=======
+        if(isDone()) {
+            return;
+        } 
+        
+        if(hasRuby)
+        {
+                try {
+                    ticr(pState.toString()); // increment our times
+
+             } catch (ScriptException | NoSuchMethodException ex) {
+                 Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+                 hasRuby = false;
+                 //timings.replace(pState, timings.get(pState) + 1);
+                 //TODO: add some non-ruby dependant alternatives to the try statement,
+                 //or die.
+             }
+
+             //next, see if we need to move out of our current context:
+             if(ttlWaitRem() == 0 && (pState == ProcessState.userWait|| pState == ProcessState.IOWait ))
+             {
+                       //initiate a change to the idle state.
+                 switchToIdle();
+             }
+             if(remCurrentCPUTime() == 0 && (pState== ProcessState.active))
+             {
+                 switchToWait();
+             }
+        }
+        stateTimeAdj(1);    
+        
+        
+    }
+>>>>>>> FETCH_HEAD
     /**
      * adjusts the process' current time, for the current context.
      *
@@ -418,8 +579,13 @@ public class Process extends AbstractProcess {
      */
 
     @Override
+<<<<<<< HEAD
     public long getTiming(ProcessState stq) {
         if (hasRuby) {
+=======
+    public long getTiming(ProcessState stq){
+        if(hasRuby)
+>>>>>>> FETCH_HEAD
             try {
                 return (getTr(stq.toString()));
 
@@ -443,16 +609,36 @@ public class Process extends AbstractProcess {
     @Override
      long remIoWait() {
 
+<<<<<<< HEAD
         return ioWaitRem;
+=======
+            return ioWaitRem;
+>>>>>>> FETCH_HEAD
     }
 
     /**
      * Gives the remaining time in MS for this CPU's burst speed.
+<<<<<<< HEAD
      *
      * @return CPU TIME NEEDED TO FINISH PROCESS
      */
      public long remCurrentCPUTime() {
 
+=======
+     * @return CPU TIME NEEDED TO FINISH PROCESS
+     */
+    public long remCurrentCPUTime() {
+       
+        try {
+            
+            long x = (long)((Invocable)jruby).invokeMethod(timingO, "getCBurst");
+            return  x;
+        } catch (ScriptException | NoSuchMethodException ex) {
+            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+            
+>>>>>>> FETCH_HEAD
         return burstValue;
     }
 
@@ -462,6 +648,7 @@ public class Process extends AbstractProcess {
     }
 
     /**
+<<<<<<< HEAD
      * Total remaining wait time in this context. Automatically handles the
      * system
      *
@@ -470,6 +657,23 @@ public class Process extends AbstractProcess {
      */
     public long ttlWaitRem() {
 
+=======
+     * Total remaining wait time in this context. Automatically handles the 
+     * system 
+     * @return 
+     * @throws javax.script.ScriptException 
+     * @throws java.lang.NoSuchMethodException 
+     */
+    public long ttlWaitRem() {
+        if(hasRuby)
+           try {
+               return (long) ((Invocable)jruby).invokeMethod(timingO, "getCWait");
+        } catch (ScriptException | NoSuchMethodException ex) {
+            Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+>>>>>>> FETCH_HEAD
         return remUserWait() + remIoWait();
     }
 

@@ -1,8 +1,8 @@
 
 public enum AlgorithmType 
 {
+	SJF,
+	SJFE,
 	RR,
-	SJFwpre,
-	SJFwopre,
 	PP;
 }

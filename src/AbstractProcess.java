@@ -37,7 +37,11 @@ import java.util.HashMap;
 public abstract class AbstractProcess {
     long pid;
     boolean isInteractive;
+<<<<<<< HEAD
 
+=======
+    long cpuTimeNeeded;
+>>>>>>> FETCH_HEAD
     
     //Initial values (set via constructor)
     long vWait;
@@ -86,9 +90,17 @@ public abstract class AbstractProcess {
         return this.isInteractive;  
     }
     //Timing getter:
+<<<<<<< HEAD
     public abstract long getTiming(String t);
     
 
+=======
+    public long getTiming(ProcessState stq){
+        return timings.get(stq);
+    } 
+    public long getTiming(String sq) {
+        return getTiming(ProcessState.valueOf(sq));
+>>>>>>> FETCH_HEAD
         
     public abstract long getTiming(ProcessState stq);
     //return timings (current process times):
@@ -143,6 +155,13 @@ public abstract class AbstractProcess {
     //process remaining time(calculated values)
     public abstract long getTotalWaitTime();
      abstract long remIoWait();
+<<<<<<< HEAD
+=======
+    
+     abstract long remUserWait();
+    
+    
+>>>>>>> FETCH_HEAD
     
      abstract long remUserWait();
     //Abstract (need to implement) methods:
