@@ -30,7 +30,7 @@
  */
 public class ptest {
     public static void main(String[] args) {
-        Process.runner(new Process(101, true, 2, 1, 0, 3));
+        Process.runner(new Process(101, false, 2, 1, 0, 3));
     }
 }
 /**/
