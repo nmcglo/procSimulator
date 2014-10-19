@@ -182,6 +182,9 @@ public class Scheduler
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
+		for(int k = 0; k < numCPUs; k++){
+			cpus.add(new CPU(k));
+		}
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -199,7 +202,7 @@ public class Scheduler
 				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
 					
 					waitingList.add(cpu.getProcess());
-					cpu.addProcess(null);
+					cpu.rmProcess();
 				}
 			});
 			if(!(waitingList.isEmpty())){
@@ -219,7 +222,7 @@ public class Scheduler
 			if(!(readyQueue.isEmpty())){
 				cpus.forEach(cpu ->{
 					if(cpu.getProcess() == null){
-						cpu.addProcess(readyQueue.poll());
+						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 				});
 			}
@@ -231,6 +234,9 @@ public class Scheduler
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
+		for(int k = 0; k < numCPUs; k++){
+			cpus.add(new CPU(k));
+		}
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -248,7 +254,7 @@ public class Scheduler
 				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
 					
 					waitingList.add(cpu.getProcess());
-					cpu.addProcess(null);
+					cpu.rmProcess();
 				}
 			});
 			if(!(waitingList.isEmpty())){
@@ -268,10 +274,12 @@ public class Scheduler
 			if(!(readyQueue.isEmpty())){
 				cpus.forEach(cpu ->{
 					if(cpu.getProcess() == null){
-						cpu.addProcess(readyQueue.poll());
+						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 					else if (cpu.getProcess().remCurrentCPUTime() > readyQueue.peek().remCurrentCPUTime()){
-						
+						readyQueue.add(cpu.getProcess().preempt());
+						cpu.rmProcess();
+						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 				});
 			}
