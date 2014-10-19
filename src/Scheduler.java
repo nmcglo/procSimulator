@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+
 /* 
  *  --- Operating Systems Homework 2 --- 
  * Copyright (c) 2014, Mark Plagge -- plaggm
@@ -180,6 +181,7 @@ public class Scheduler
 	{
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
+		ArrayList<Process> waitingList = new ArrayList<Process>();
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -187,12 +189,48 @@ public class Scheduler
 				readyQueue.add(allProcesses.get(i));
 			}	
 		}
+		while(!(readyQueue.isEmpty()) && !(waitingList.isEmpty())){
+			allProcesses.forEach(p -> p.tick());
+			cpus.forEach(cpu -> cpu.tick());
+			cpus.forEach(cpu->{
+				if(cpu.getProcess() != null && 
+				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
+				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
+				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
+					
+					waitingList.add(cpu.getProcess());
+					cpu.addProcess(null);
+				}
+			});
+			if(!(waitingList.isEmpty())){
+				waitingList.forEach(proc -> {
+					
+					if(proc.getCurrentState() == ProcessState.idle){
+						readyQueue.add(proc);
+						waitingList.remove(proc);
+					}
+					else if(proc.getCurrentState() == ProcessState.terminated){
+						allProcesses.get(allProcesses.indexOf(proc)).setState(ProcessState.terminated);
+						waitingList.remove(proc);
+					}
+					
+				});
+			}
+			if(!(readyQueue.isEmpty())){
+				cpus.forEach(cpu ->{
+					if(cpu.getProcess() == null){
+						cpu.addProcess(readyQueue.poll());
+					}
+				});
+			}
+		}
 	}
 	
 	public void runShortestJobFirstPreemption()
 	{
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
+		ArrayList<Process> waitingList = new ArrayList<Process>();
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -200,6 +238,44 @@ public class Scheduler
 				readyQueue.add(allProcesses.get(i));
 			}	
 		}	
+		while(!(readyQueue.isEmpty()) && !(waitingList.isEmpty())){
+			allProcesses.forEach(p -> p.tick());
+			cpus.forEach(cpu -> cpu.tick());
+			cpus.forEach(cpu->{
+				if(cpu.getProcess() != null && 
+				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
+				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
+				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
+					
+					waitingList.add(cpu.getProcess());
+					cpu.addProcess(null);
+				}
+			});
+			if(!(waitingList.isEmpty())){
+				waitingList.forEach(proc -> {
+					
+					if(proc.getCurrentState() == ProcessState.idle){
+						readyQueue.add(proc);
+						waitingList.remove(proc);
+					}
+					else if(proc.getCurrentState() == ProcessState.terminated){
+						allProcesses.get(allProcesses.indexOf(proc)).setState(ProcessState.terminated);
+						waitingList.remove(proc);
+					}
+					
+				});
+			}
+			if(!(readyQueue.isEmpty())){
+				cpus.forEach(cpu ->{
+					if(cpu.getProcess() == null){
+						cpu.addProcess(readyQueue.poll());
+					}
+					else if (cpu.getProcess().remCurrentCPUTime() > readyQueue.peek().remCurrentCPUTime()){
+						
+					}
+				});
+			}
+		}
 	}
 	
 	public void runRoundRobin()
@@ -230,8 +306,7 @@ public class Scheduler
 	
 	
 	
-	
-	
+
 	
 
 }
