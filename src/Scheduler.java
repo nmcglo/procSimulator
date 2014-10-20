@@ -179,6 +179,7 @@ public class Scheduler
 	
 	public void runShortestJobFirst()
 	{
+		
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
@@ -231,6 +232,7 @@ public class Scheduler
 	
 	public void runShortestJobFirstPreemption()
 	{
+		
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
