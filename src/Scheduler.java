@@ -196,7 +196,7 @@ public class Scheduler
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
-				if(cpu.isIdle() && 
+				if(cpu.getProcess() != null && 
 				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
 				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
 				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
@@ -221,7 +221,7 @@ public class Scheduler
 			}
 			if(!(readyQueue.isEmpty())){
 				cpus.forEach(cpu ->{
-					if(cpu.isIdle()){
+					if(cpu.getProcess() == null){
 						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 				});
@@ -248,7 +248,7 @@ public class Scheduler
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
-				if(cpu.isIdle() && 
+				if(cpu.getProcess() != null && 
 				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
 				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
 				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
@@ -273,7 +273,7 @@ public class Scheduler
 			}
 			if(!(readyQueue.isEmpty())){
 				cpus.forEach(cpu ->{
-					if(cpu.isIdle()){
+					if(cpu.getProcess() == null){
 						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 					else if (cpu.getProcess().remCurrentCPUTime() > readyQueue.peek().remCurrentCPUTime()){
