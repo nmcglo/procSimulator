@@ -350,16 +350,30 @@ public class Scheduler
 			}
 			if(!(readyQueue.isEmpty())){
 				cpus.forEach(cpu ->{
-					if(cpu.getProcess() == null){
+					if(cpu.isIdle()){
 						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
-					else if (cpu.getProcess().remCurrentCPUTime() > readyQueue.peek().remCurrentCPUTime()){
+					else if (cpu.getProcess().priority > readyQueue.peek().priority){
 						readyQueue.add(cpu.getProcess().preempt());
 						cpu.rmProcess();
 						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 				});
 			}
+			
+			readyQueue.forEach(proc ->
+			{ 
+				if(proc.getPriority() > 0)
+				{
+					if(proc.getTiming(ProcessState.idle) > 1200)
+					{
+						proc.priority--;
+					}	
+				}
+			});
+			
+			
+			
 		}
 		
 		
