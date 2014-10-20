@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -193,7 +194,7 @@ public class Scheduler
 				readyQueue.add(allProcesses.get(i));
 			}	
 		}
-		while(!(readyQueue.isEmpty()) && !(waitingList.isEmpty())){
+		while(!(isCPUBoundDone(readyQueue, waitingList))){
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
@@ -246,7 +247,7 @@ public class Scheduler
 				readyQueue.add(allProcesses.get(i));
 			}	
 		}	
-		while(!(readyQueue.isEmpty()) && !(waitingList.isEmpty())){
+		while(!(isCPUBoundDone(readyQueue, waitingList))){
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
@@ -300,6 +301,7 @@ public class Scheduler
 			}
 		}
 	}
+	
 	
 	public void runPreemptivePriority()
 	{
@@ -364,6 +366,28 @@ public class Scheduler
 		
 		
 		
+		
+	}
+	
+	public boolean isCPUBoundDone(PriorityQueue<Process> readyQueue, ArrayList<Process> waitingList){
+		boolean done = true;
+		
+		Iterator<Process> readyIter = readyQueue.iterator();
+		while(readyIter.hasNext()){
+			if(!(readyIter.next().isInteractive())){ //not interactive means CPU bound
+				done = false;
+				return done;
+			}
+		}
+		Iterator<Process> waitingIter = waitingList.iterator();
+		while(waitingIter.hasNext()){
+			if(!(waitingIter.next().isInteractive())){
+				done = false;
+				return done;
+			}
+		}
+		
+		return done;
 		
 	}
 	
