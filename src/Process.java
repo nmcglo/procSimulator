@@ -528,5 +528,12 @@ public class Process extends AbstractProcess {
     public long getTiming(String t) {
         return getTiming(ProcessState.valueOf(t));
     }
+    
+    public Process preempt()
+    {
+        this.pState = ProcessState.idle;
+        this.ctxOverhead();
+        return this;
+    }
 }
 ///final
