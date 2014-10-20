@@ -7,6 +7,26 @@ public class TestGrounds {
 	{
 		// TODO Auto-generated method stub
 		
+		PriorityQueue<Integer> myqueue = new PriorityQueue<Integer>();
+		
+		myqueue.add(5);
+		myqueue.add(3);
+		myqueue.add(1);
+		myqueue.add(4);
+		
+		
+		
+		System.out.println(myqueue);
+		
+		for(int i = 0; i < 4; i++)
+		{
+			System.out.println(myqueue.poll());
+			
+		}
+		
+		
+		
+		
 		PriorityComparator pComparator = new PriorityComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(pComparator);
 		
@@ -23,8 +43,12 @@ public class TestGrounds {
 		readyQueue.add(p5);
 		
 		
-		
-		System.out.println(readyQueue);
+
+		for(int i = 0; i < 5; i++)
+		{
+			System.out.println(readyQueue.poll().pid);
+			
+		}
 	}
 
 }
