@@ -32,8 +32,8 @@ public class CPU extends AbstractCPU{
     private int usageTime;
     private int CPUID;
     
-    public CPU(int idleTime, int usageTime, int ID){
-    	super(idleTime, usageTime, ID);
+    public CPU(int ID){
+    	super(ID);
     }
     
     @Override
