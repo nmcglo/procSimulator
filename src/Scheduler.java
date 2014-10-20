@@ -319,9 +319,23 @@ public class Scheduler
 				readyQueue.add(allProcesses.get(i));
 			}	
 		}
+		
+		
+		
 		//need to check if all CPU bound processes are complete, not if
 		//ready queue is empty.
-		while(!(readyQueue.isEmpty()) && !(waitingList.isEmpty())){
+		while(!(isCPUBoundDone(readyQueue, waitingList))){
+			readyQueue.forEach(proc ->
+			{ 
+				if(proc.getPriority() > 0)
+				{
+					if(proc.getTiming(ProcessState.idle) > 1200)
+					{
+						proc.priority--;
+					}	
+				}
+			});
+			
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
@@ -361,16 +375,6 @@ public class Scheduler
 				});
 			}
 			
-			readyQueue.forEach(proc ->
-			{ 
-				if(proc.getPriority() > 0)
-				{
-					if(proc.getTiming(ProcessState.idle) > 1200)
-					{
-						proc.priority--;
-					}	
-				}
-			});
 			
 			
 			
