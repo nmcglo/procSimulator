@@ -215,7 +215,7 @@ public class Scheduler
 						waitingList.remove(proc);
 					}
 					else if(proc.getCurrentState() == ProcessState.terminated){
-						allProcesses.get(allProcesses.indexOf(proc)).setState(ProcessState.terminated);
+						proc.switchContext(ProcessState.terminated);
 						waitingList.remove(proc);
 					}
 					
@@ -268,7 +268,7 @@ public class Scheduler
 						waitingList.remove(proc);
 					}
 					else if(proc.getCurrentState() == ProcessState.terminated){
-						allProcesses.get(allProcesses.indexOf(proc)).setState(ProcessState.terminated);
+						proc.switchContext(ProcessState.terminated);
 						waitingList.remove(proc);
 					}
 					
@@ -356,7 +356,7 @@ public class Scheduler
 						waitingList.remove(proc);
 					}
 					else if(proc.getCurrentState() == ProcessState.terminated){
-						allProcesses.get(allProcesses.indexOf(proc)).setState(ProcessState.terminated);
+						proc.switchContext(ProcessState.terminated);
 						waitingList.remove(proc);
 					}
 					
@@ -376,15 +376,8 @@ public class Scheduler
 			}
 			
 			
-			
-			
 		}
-		
-		
-		
-		
-		
-		
+			
 	}
 	
 	public boolean isCPUBoundDone(PriorityQueue<Process> readyQueue, ArrayList<Process> waitingList){
@@ -404,14 +397,7 @@ public class Scheduler
 				return done;
 			}
 		}
-		
 		return done;
-		
 	}
-	
-	
-	
-
-	
 
 }
