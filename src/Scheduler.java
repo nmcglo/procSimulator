@@ -303,6 +303,11 @@ public class Scheduler
 	{
 		PriorityComparator pComparator = new PriorityComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(pComparator);
+		ArrayList<Process> waitingList = new ArrayList<Process>();
+		for(int k = 0; k < numCPUs; k++)
+		{
+			cpus.add(new CPU(k));
+		}
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -310,6 +315,52 @@ public class Scheduler
 				readyQueue.add(allProcesses.get(i));
 			}	
 		}
+		while(!(readyQueue.isEmpty()) && !(waitingList.isEmpty())){
+			allProcesses.forEach(p -> p.tick());
+			cpus.forEach(cpu -> cpu.tick());
+			cpus.forEach(cpu->{
+				if(cpu.isIdle() && 
+				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
+				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
+				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
+					
+					waitingList.add(cpu.getProcess());
+					cpu.rmProcess();
+				}
+			});
+			if(!(waitingList.isEmpty())){
+				waitingList.forEach(proc -> {
+					
+					if(proc.getCurrentState() == ProcessState.idle){
+						readyQueue.add(proc);
+						waitingList.remove(proc);
+					}
+					else if(proc.getCurrentState() == ProcessState.terminated){
+						allProcesses.get(allProcesses.indexOf(proc)).setState(ProcessState.terminated);
+						waitingList.remove(proc);
+					}
+					
+				});
+			}
+			if(!(readyQueue.isEmpty())){
+				cpus.forEach(cpu ->{
+					if(cpu.getProcess() == null){
+						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
+					}
+					else if (cpu.getProcess().remCurrentCPUTime() > readyQueue.peek().remCurrentCPUTime()){
+						readyQueue.add(cpu.getProcess().preempt());
+						cpu.rmProcess();
+						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
+					}
+				});
+			}
+		}
+		
+		
+		
+		
+		
+		
 	}
 	
 	
