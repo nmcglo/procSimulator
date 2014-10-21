@@ -43,11 +43,14 @@ public class Scheduler
 	private ArrayList<CPU> cpus;
 	
 	
-	public Scheduler(AlgorithmType atype)
+	public Scheduler(ArrayList<Process> procs, ArrayList<CPU> CPUs, int ctxSwitchTime, int rrTimeSlice, AlgorithmType atype)
 	{
-		this.numProcs = 0;
-		this.contextSwitchTime = 0;
-		this.RRTimeSlice = 0;
+		this.allProcesses = procs;
+		this.numProcs = allProcesses.size();
+		this.cpus = CPUs;
+		this.numCPUs = cpus.size();
+		this.contextSwitchTime = ctxSwitchTime;
+		this.RRTimeSlice = rrTimeSlice;
 		this.algorithmType = atype;
 		this.totalTimeSpent = 0;
 	}
@@ -120,19 +123,20 @@ public class Scheduler
 	
 	
 	//BEGIN OTHER METHODS*****************************************************
+	//May not be used
 	public void addNewProcess(Process p)
 	{
 		p.setState(ProcessState.idle);
 		this.numProcs++;
 		this.allProcesses.add(p);
 	}
-	
+	//May not be used
 	public void addCPU(CPU cpu)
 	{
 		this.numCPUs++;
 		this.cpus.add(cpu);
 	}
-	
+	//May not be used
 	public void moveToCPU(Process p)
 	{
 		p.switchContext(ProcessState.active);
@@ -144,7 +148,7 @@ public class Scheduler
 				cpus.get(i).addProcess(p);
 		}
 	}
-	
+	//May not be used
 	public void moveFromCPUtoWait(Process p)
 	{
 		
@@ -184,9 +188,6 @@ public class Scheduler
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
-		for(int k = 0; k < numCPUs; k++){
-			cpus.add(new CPU(k));
-		}
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -237,9 +238,6 @@ public class Scheduler
 		SJFComparator sfjComparator = new SJFComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(sfjComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
-		for(int k = 0; k < numCPUs; k++){
-			cpus.add(new CPU(k));
-		}
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
@@ -308,10 +306,6 @@ public class Scheduler
 		PriorityComparator pComparator = new PriorityComparator();
 		PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(pComparator);
 		ArrayList<Process> waitingList = new ArrayList<Process>();
-		for(int k = 0; k < numCPUs; k++)
-		{
-			cpus.add(new CPU(k));
-		}
 		for (int i = 0; i < allProcesses.size(); i++)
 		{
 			if (allProcesses.get(i).pState == ProcessState.idle)
