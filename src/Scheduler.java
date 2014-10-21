@@ -260,40 +260,48 @@ public class Scheduler
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
-				if(cpu.isIdle() && 
-				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
-				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
-				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
+				if(!(cpu.isIdle())){ 
+					if((cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
+						cpu.getProcess().getCurrentState() == ProcessState.userWait ||
+						cpu.getProcess().getCurrentState() == ProcessState.terminated)){
 					
-					waitingList.add(cpu.getProcess());
-					cpu.rmProcess();
+						waitingList.add(cpu.getProcess());
+						cpu.rmProcess();
+					}
 				}
 			});
 			if(!(waitingList.isEmpty())){
-				waitingList.forEach(proc -> {
-					
+				for(int i = 0; i < waitingList.size(); i++){ 		
+					Process proc = waitingList.get(i);		
 					if(proc.getCurrentState() == ProcessState.idle){
 						readyQueue.add(proc);
 						waitingList.remove(proc);
 					}
 					else if(proc.getCurrentState() == ProcessState.terminated){
 						proc.switchContext(ProcessState.terminated);
+						System.out.println(proc.getPid() + " has terminated");
 						waitingList.remove(proc);
 					}
 					
-				});
+				}
 			}
 			if(!(readyQueue.isEmpty())){
-				cpus.forEach(cpu ->{
-					if(cpu.isIdle()){
-						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
+				for(int j = 0; j < numCPUs; j++){					
+					CPU cpu = cpus.get(j); 
+					if(!(readyQueue.isEmpty())){
+						if(cpu.isIdle()){
+							System.out.println(readyQueue.toString()+" is entering CPU");
+							cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));	
+						}
+						else if (cpu.getProcess().burstValue > readyQueue.peek().burstValue){
+							readyQueue.add(cpu.getProcess().preempt());
+							System.out.println(cpu.getProcess().getPid() + " was preempted");
+							cpu.rmProcess();
+							System.out.println(readyQueue.toString()+" is entering CPU");
+							cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
+						}
 					}
-					else if (cpu.getProcess().remCurrentCPUTime() > readyQueue.peek().remCurrentCPUTime()){
-						readyQueue.add(cpu.getProcess().preempt());
-						cpu.rmProcess();
-						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
-					}
-				});
+				}
 			}
 		}
 	}
