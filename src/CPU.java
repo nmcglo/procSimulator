@@ -26,11 +26,6 @@
  */
 
 public class CPU extends AbstractCPU{
-	
-	private Process process;
-    private int idleTime;
-    private int usageTime;
-    private int CPUID;
     
     public CPU(int ID){
     	super(ID);
@@ -38,12 +33,12 @@ public class CPU extends AbstractCPU{
     
     @Override
     public void addProcess(Process p) {
-        process = p;
+        this.process = p;
     }
 
     @Override
     public void rmProcess() {
-    	process = null;
+    	this.process = null;
     }
 
     @Override
@@ -55,7 +50,7 @@ public class CPU extends AbstractCPU{
     }
     
     public int getIdleTime() {
-       return idleTime;
+       return this.idleTime;
     }
     
     public boolean isIdle(){
@@ -63,11 +58,11 @@ public class CPU extends AbstractCPU{
     }
 
 	public Process getProcess() {
-		return process;
+		return this.process;
 	}
 
 	public int getUsageTime() {
-		return usageTime;
+		return this.usageTime;
 	}
 
 	public void setUsageTime(int usageTime) {
@@ -75,11 +70,11 @@ public class CPU extends AbstractCPU{
 	}
 
 	public int getCPUID() {
-		return CPUID;
+		return this.CPUID;
 	}
 
 	public void setCPUID(int cPUID) {
-		CPUID = cPUID;
+		this.CPUID = cPUID;
 	}
 
 	public void setIdleTime(int idleTime) {

@@ -323,7 +323,8 @@ public class Process extends AbstractProcess {
             {
                 this.burstNums ++;
             }
-            this.switchContext(ProcessState.terminated);
+            //a change. was terminating interactive processes before
+            else{ this.switchContext(ProcessState.terminated);}
             return;
         } else {
             if (hasRuby) {

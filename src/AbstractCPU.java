@@ -34,10 +34,10 @@
  */
 
 public abstract class AbstractCPU {
-    private Process process;
-    private int idleTime;
-    private int usageTime;
-    private int CPUID;
+    protected Process process;
+    protected int idleTime;
+    protected int usageTime;
+    protected int CPUID;
     
     public AbstractCPU(int ID){
     	process = null;
@@ -47,7 +47,7 @@ public abstract class AbstractCPU {
     }
     
     public boolean isIdle(){
-        return process != null;
+        return this.process == null;
     }
     
     public  abstract void addProcess(Process p);

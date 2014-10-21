@@ -181,7 +181,12 @@ public class Scheduler
 		}
 		
 	}
-	
+	/* Changes made to rSJF: 
+	 * 1. changed forEach to regular for loops for 2nd and 3rd big if statements.
+	 * 2. edited isIdle in CPU.
+	 * 3. changed member variables in AbstractCPU to protected, not private
+	 * 4. removed member variables in CPU, thus only being in AbstractCPU now
+	 * 5. added else statement in tick() in Process. */
 	public void runShortestJobFirst()
 	{
 		
@@ -196,40 +201,46 @@ public class Scheduler
 			}	
 		}
 		while(!(isCPUBoundDone(readyQueue, waitingList))){
+			
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
 			cpus.forEach(cpu->{
-				if(cpu.isIdle() && 
-				(cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
-				cpu.getProcess().getCurrentState() == ProcessState.userWait ||
-				cpu.getProcess().getCurrentState() == ProcessState.terminated)){
-					
-					waitingList.add(cpu.getProcess());
-					cpu.rmProcess();
+				if(!(cpu.isIdle())){
+					if (cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
+						cpu.getProcess().getCurrentState() == ProcessState.userWait ||
+						cpu.getProcess().getCurrentState() == ProcessState.terminated){
+								
+						waitingList.add(cpu.getProcess());
+						cpu.rmProcess();
+					}
 				}
+				
 			});
 			if(!(waitingList.isEmpty())){
-				waitingList.forEach(proc -> {
-					
+				for(int i = 0; i < waitingList.size(); i++){ 		//a change
+					Process proc = waitingList.get(i);				//a change
 					if(proc.getCurrentState() == ProcessState.idle){
 						readyQueue.add(proc);
 						waitingList.remove(proc);
 					}
 					else if(proc.getCurrentState() == ProcessState.terminated){
 						proc.switchContext(ProcessState.terminated);
+						System.out.println(proc.getPid()+" has terminated");
 						waitingList.remove(proc);
 					}
 					
-				});
+				}
 			}
 			if(!(readyQueue.isEmpty())){
-				cpus.forEach(cpu ->{
-					if(cpu.isIdle()){
+				for(int j = 0; j < numCPUs; j++){					//a change
+					CPU cpu = cpus.get(j); 							//a change
+					if(cpu.isIdle() && !(readyQueue.isEmpty())){ 	//a change
 						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
-				});
+				}
 			}
 		}
+		System.out.println("DONE!");
 	}
 	
 	public void runShortestJobFirstPreemption()
