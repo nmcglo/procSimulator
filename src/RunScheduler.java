@@ -11,11 +11,11 @@ public class RunScheduler {
 	public static void main (String args[]){
 		
 		int numCPUs = 4;
-		int numOfProcs = 100;
+		int numOfProcs = 12;
 		int ctxSwitchTime = 2;
 		int numCPUBoundBursts = 8;
 		int rrTimeSlice = 4;
-		AlgorithmType algo = AlgorithmType.SJF;
+		AlgorithmType algo = AlgorithmType.SJFE;
 		cpus = new ArrayList<CPU>(numCPUs);
 		processes = new ArrayList<Process>(numOfProcs);
 		generateProcesses(numOfProcs, numCPUBoundBursts, ctxSwitchTime, algo);

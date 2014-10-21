@@ -150,7 +150,9 @@ public class Process extends AbstractProcess {
          }
          }*/
         //alarm
-        this.burstValue = 1;
+    	Random rand = new Random();
+	    int randomNum = rand.nextInt((3000 - 200) + 1) + 200;
+        this.burstValue = randomNum;
     }
 
     /**
