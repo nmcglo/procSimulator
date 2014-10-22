@@ -99,7 +99,7 @@ public class Process extends AbstractProcess {
    
     }
 
-    private ScriptingContainer ruby;
+    //private ScriptingContainer ruby;
     boolean hasRuby;
     ScriptEngine jruby;
     Object receiver;
@@ -263,7 +263,8 @@ public class Process extends AbstractProcess {
 
     public void ticr(String itm) throws ScriptException, NoSuchMethodException {
         // jruby.eval("$timings.tickTime(\"" + itm + "\")");
-        ((Invocable) jruby).invokeMethod(receiver, "tickTime", itm);
+        //(Invocable) jruby).invokeMethod(receiver, "tickTime", itm);
+        this.timings.replace(ProcessState.valueOf(itm),timings.get(ProcessState.valueOf(itm)) +1);
 
     }
 
@@ -272,8 +273,9 @@ public class Process extends AbstractProcess {
     }
 
     private void createRuby(ArrayList<String> timings) {
-        hasRuby = true;
+        hasRuby = false;
 
+        /*
         try {
             System.setProperty("org.jruby.embed.localvariable.behavior", "persistant");
             URL url = getClass().getResource("processTimer.rb");
@@ -293,11 +295,11 @@ public class Process extends AbstractProcess {
 
         } catch (FileNotFoundException | NoSuchMethodException | ScriptException ex) {
             Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
-            //hasRuby=false;
+            
+            hasRuby=false;
             //no ruby here.   
-        }
+        } */
     }
-
     /**
      * IsDone tells you if the process is done.
      *
@@ -329,16 +331,17 @@ public class Process extends AbstractProcess {
             else{ this.switchContext(ProcessState.terminated);}
             return;
         } else {
-            if (hasRuby) {
-                try {
-                    ticr(pState.toString()); // increment our times
-                } catch (ScriptException | NoSuchMethodException ex) {
-                    Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
+            
+            //if (hasRuby) {
+            //    try {
+            //        ticr(pState.toString()); // increment our times
+           //     } catch (ScriptException | NoSuchMethodException ex) {
+           //         Logger.getLogger(Process.class.getName()).log(Level.SEVERE, null, ex);
                     hasRuby = false;
                     timings.replace(pState, timings.get(pState) + 1);
                     //TODO: add some non-ruby dependant alternatives to the try statement,
                     //or die.
-                }
+            //    }
             }
             switch (pState) {
                 case active:
@@ -372,7 +375,7 @@ public class Process extends AbstractProcess {
 
             //stateTimeAdj(1);    
         //and update our remaning burst/wait times:
-    }
+    
 
     /**
      * adjusts the process' current time, for the current context.
