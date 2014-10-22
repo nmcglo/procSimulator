@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 /* 
@@ -53,6 +54,8 @@ public class Scheduler
 		this.RRTimeSlice = rrTimeSlice;
 		this.algorithmType = atype;
 		this.totalTimeSpent = 0;
+                
+                    
 	}
 	
 	//GETTERS AND SETTERS****************************************************************
@@ -305,18 +308,62 @@ public class Scheduler
 			}
 		}
 	}
-	
+	public static ConcurrentLinkedQueue<Process> rrWaitProcs;
+        public static ConcurrentLinkedQueue<Process> rrIdleProcs;
+        public static int rrCT = 0;
 	public void runRoundRobin()
 	{
-		ArrayList<Process> readyQueue = new ArrayList<Process>();
-		//No priority needed
-		for (int i = 0; i < allProcesses.size(); i++)
-		{
-			if (allProcesses.get(i).pState == ProcessState.idle)
-			{
-				readyQueue.add(allProcesses.get(i));
-			}
-		}
+          
+            rrWaitProcs = new ConcurrentLinkedQueue<>();
+            rrIdleProcs = new ConcurrentLinkedQueue<>();
+            //load up the processes:
+            allProcesses.parallelStream().forEach((px) -> {
+                rrIdleProcs.add(px);
+            });
+            
+        }
+              //assuming that this method is called over and over again through
+            //a running loop (pseudo anonymous function haha)
+            public void runRR() {
+            for(CPU cp : cpus)
+            {
+                if(cp.getProcess().remCurrentCPUTime() == 0) // process is done.
+                {
+                    rrWaitProcs.add(cp.getProcess());
+                    cp.rmProcess();
+                }
+                if(cp.isIdle())
+                {
+                    cp.addProcess(rrIdleProcs.poll());
+                }
+                //and do the time slice thing
+            }
+            if(rrCT == RRTimeSlice)
+            {
+                //slice of time has happened. Preempt the cpu procs:
+                for(CPU cp:cpus)
+                {
+                    rrWaitProcs.add(cp.getProcess());
+                    cp.rmProcess();
+                    cp.addProcess(rrWaitProcs.poll());
+                    
+                }
+            }
+            //clean up the Process stuff - move readies out of wait:
+            rrWaitProcs.stream().filter((p) -> (!p.isWaiting())).map((p) -> {
+                rrIdleProcs.add(p);
+                return p;
+            }).forEach((p) -> {
+                rrWaitProcs.remove(p);
+            });
+            
+            //Tick All Processes
+            allProcesses.forEach((p) -> p.tick());
+            cpus.parallelStream().forEach((c) -> c.tick());
+            rrCT = (rrCT + 1) % RRTimeSlice;
+            
+           
+		
 	}
 	
 	
