@@ -201,12 +201,16 @@ public class Scheduler
 			if (allProcesses.get(i).pState == ProcessState.idle)
 			{
 				readyQueue.add(allProcesses.get(i));
+				System.out.print("[time "+cpus.get(1).getIdleTime()+cpus.get(1).getUsageTime()+"ms] ");
+				
 			}	
 		}
 		while(!(isCPUBoundDone(readyQueue, waitingList))){
 			
 			allProcesses.forEach(p -> p.tick());
 			cpus.forEach(cpu -> cpu.tick());
+			
+			
 			cpus.forEach(cpu->{
 				if(!(cpu.isIdle())){
 					if (cpu.getProcess().getCurrentState() == ProcessState.IOWait ||
@@ -220,8 +224,8 @@ public class Scheduler
 				
 			});
 			if(!(waitingList.isEmpty())){
-				for(int i = 0; i < waitingList.size(); i++){ 		//a change
-					Process proc = waitingList.get(i);				//a change
+				for(int i = 0; i < waitingList.size(); i++){ 		
+					Process proc = waitingList.get(i);				
 					if(proc.getCurrentState() == ProcessState.idle){
 						readyQueue.add(proc);
 						waitingList.remove(proc);
@@ -235,15 +239,14 @@ public class Scheduler
 				}
 			}
 			if(!(readyQueue.isEmpty())){
-				for(int j = 0; j < numCPUs; j++){					//a change
-					CPU cpu = cpus.get(j); 							//a change
-					if(cpu.isIdle() && !(readyQueue.isEmpty())){ 	//a change
+				for(int j = 0; j < numCPUs; j++){					
+					CPU cpu = cpus.get(j); 							
+					if(cpu.isIdle() && !(readyQueue.isEmpty())){ 	
 						cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
 					}
 				}
 			}
 		}
-		System.out.println("DONE!");
 	}
 	
 	public void runShortestJobFirstPreemption()
