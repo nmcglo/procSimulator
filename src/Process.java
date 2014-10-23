@@ -239,7 +239,7 @@ public class Process extends AbstractProcess {
      * @param newContext
      * @return a copy of the process.
      */
-    public final Process switchContext(ProcessState newContext) {
+    public Process switchContext(ProcessState newContext) {
         switch (newContext) {
             case idle:
                 switchToIdle();
@@ -255,6 +255,7 @@ public class Process extends AbstractProcess {
                 break;
             case terminated:
                 switchToTerminated();
+                System.out.println("OGGABOOGA");
                 entTerminatedStr();
                 
                 break;

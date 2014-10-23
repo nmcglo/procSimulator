@@ -28,6 +28,7 @@
 public class CPU extends AbstractCPU{
     boolean isCtxSwitch;
     long oldP = 0;
+    long totalTicks = 0;
 
     public CPU(int ID){
     	super(ID);
@@ -43,7 +44,7 @@ public class CPU extends AbstractCPU{
             ///print msg:
             //[time 4279ms] Context switch (swapping out process ID 4 for process ID 17)
             
-            System.out.println("[time "+ this.getIdleTime() + this.getUsageTime() +"ms] Context switch (swapping out process ID " + oldP + "for process ID " + p.getPid()+")");  
+            System.out.println("[time "+ totalTicks +"ms] Context switch (swapping out process ID " + oldP + "for process ID " + p.getPid()+")");  
                         oldP = p.getPid();
                     }
         this.process = p;
@@ -54,9 +55,10 @@ public class CPU extends AbstractCPU{
         isCtxSwitch = true;
     	this.process = null;
     }
-
+    
     @Override
     public void tick() {
+    	totalTicks++;
         if(process == null)
             this.idleTime ++;
         else
