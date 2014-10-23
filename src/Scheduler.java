@@ -275,27 +275,7 @@ public class Scheduler {
             }
         }
     }
-    public static ConcurrentLinkedQueue<Process> rrWaitProcs;
-    public static ConcurrentLinkedQueue<Process> rrIdleProcs;
-    public static int rrCT = 0;
 
-    public void runRoundRobin() {
-        rrWaitProcs = new ConcurrentLinkedQueue<>();
-        rrIdleProcs = new ConcurrentLinkedQueue<>();
-        PriorityQueue<Process> x;
-        ArrayList<Process> y;
-//load up the processes:
-        allProcesses.parallelStream().forEach((px) -> {
-            rrIdleProcs.add(px);
-        });
-        boolean runAgain;
-        do {
-            runRR();
-         x= new PriorityQueue<>(rrIdleProcs);
-         y = new ArrayList<>(rrWaitProcs);
-        }while(!isCPUBoundDone(x,y));
-   
-    }
 //assuming that this method is called over and over again through
 //a running loop (pseudo anonymous function haha)
 
