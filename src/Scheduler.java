@@ -275,7 +275,41 @@ public class Scheduler {
             }
         }
     }
+    
+///***** ROUND ROBIN CODE *******////
 
+    public static ConcurrentLinkedQueue<Process> rrWaitProcs;
+    public static ConcurrentLinkedQueue<Process> rrIdleProcs;
+    public static int rrCT = 0;
+
+    public void runRoundRobin() {
+        rrWaitProcs = new ConcurrentLinkedQueue<>();
+        rrIdleProcs = new ConcurrentLinkedQueue<>();
+        PriorityQueue<Process> x;
+        ArrayList<Process> y;
+//load up the processes:
+        allProcesses.parallelStream().forEach((px) -> {
+            rrIdleProcs.add(px);
+        });
+        long isDone;
+        long lp;
+  
+        
+        lp = allProcesses.stream().filter(p->p.isInteractive == false).count();
+        boolean runAgain;
+        do {
+            isDone = 0;
+            runRR();
+            for(Process p : allProcesses)
+                if (p.getCurrentState() == ProcessState.terminated && p.isInteractive == false)
+                    isDone ++;
+            
+            
+           
+            
+        }while(isDone == lp);
+   
+    }
 //assuming that this method is called over and over again through
 //a running loop (pseudo anonymous function haha)
 
@@ -312,6 +346,7 @@ public class Scheduler {
         cpus.parallelStream().forEach((c) -> c.tick());
         rrCT = (rrCT + 1) % RRTimeSlice;
     }
+///END ROUND ROBIN **********************************************************
 
 
     public void runPreemptivePriority() {
