@@ -167,6 +167,7 @@ public class Scheduler {
                 runPreemptivePriority();
                 break;
         }
+        calculateStats();
     }
 
     public void runShortestJobFirst() {
@@ -467,7 +468,68 @@ public class Scheduler {
         });
         totalMS++;
     }
+    
+    public void calculateStats(){
+    	long minTATime = 0;
+    	long avgTATime = 0;
+    	long maxTATime = 0;
+    	long minWaitTime = 0;
+    	long avgWaitTime = 0;
+    	long maxWaitTime = 0;
+    	int count;
+    	for(count = 0; count<allProcesses.size(); count++){
+    		Process p = allProcesses.get(count);
+    		long ttlTrn = p.getActiveTime() + p.getTotalWaitTime();
+    		long ttlWait = p.getTotalWaitTime();
+    		avgTATime += ttlTrn;
+    		avgWaitTime += ttlWait;
+    		
+    		if(count == 0){
+    			minTATime = ttlTrn;
+    	    	maxTATime = ttlTrn;
+    	    	minWaitTime = ttlWait;
+    	    	maxWaitTime = ttlWait;
+    		}
+    		else{ 
+    			if(ttlTrn <= minTATime)	minTATime = ttlTrn;
+    			if(ttlTrn >= maxTATime)	maxTATime = ttlTrn;
+    			if(ttlWait <= minWaitTime) minWaitTime = ttlWait;
+    			if(ttlWait >- maxWaitTime) maxWaitTime = ttlWait;
+    		}
+    	}
+    	avgTATime = avgTATime / count;
+    	avgWaitTime = avgWaitTime / count;
+    	
+    	count = 0;
+    	double avgCPUUtil = 0;
+    	for(count = 0; count <cpus.size(); count++){
+    		CPU cpu = cpus.get(count);
+    		double cpuUse =(double) cpu.getUsageTime();
+    		double cpuIdle = (double) cpu.getIdleTime();
+    		avgCPUUtil = avgCPUUtil + (cpuUse / (cpuUse + cpuIdle));
+    	}
+    	avgCPUUtil = (avgCPUUtil / count)* 100;
+    	printStats(minTATime, avgTATime, maxTATime, minWaitTime, avgWaitTime, maxWaitTime, avgCPUUtil);
+    	
+    }
+    
+    public void printStats(long minTA, long avgTA, long maxTA, long minWait, long avgWait, long maxWait, double avgCPU){
+    	System.out.println("\nTurnaround time: min "+minTA+"ms; avg "+avgTA+"ms; max "+maxTA+"ms");
+    	System.out.println("Total wait time: min "+minWait+"ms; avg "+avgWait+"ms; max "+maxWait+"ms");
+    	System.out.printf("Average CPU utilization: %.3f%%\n",avgCPU);
+    	System.out.println();
+    	System.out.println("Average CPU utilization per process:");
+    	for(int i = 0; i<allProcesses.size(); i++){
+    		Process p = allProcesses.get(i);
+    		double pActTime = (double) p.getActiveTime();
+    		double pWaitTime = (double) p.getTotalWaitTime();
+    		double cpuUse = (pActTime / (pActTime + pWaitTime))*100;
+    		System.out.printf("Process ID %d: %.3f%%\n", p.getPid(), cpuUse);
+    	}
+    }
 
 }
 
 //ADD TICK 2
+
+
