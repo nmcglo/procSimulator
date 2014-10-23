@@ -396,7 +396,6 @@ public class Scheduler {
                         readyQueue.add(proc);
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
-                        proc.switchContext(ProcessState.terminated);
                         waitingList.remove(proc);
                     }
                 }
