@@ -231,6 +231,7 @@ public class Scheduler {
             }
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
+        	this.tick();
             allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
@@ -251,7 +252,6 @@ public class Scheduler {
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
                         proc.switchContext(ProcessState.terminated);
-                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -261,13 +261,10 @@ public class Scheduler {
                     CPU cpu = cpus.get(j);
                     if (!(readyQueue.isEmpty())) {
                         if (cpu.isIdle()) {
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         } else if (cpu.getProcess().burstValue > readyQueue.peek().burstValue) {
                             readyQueue.add(cpu.getProcess().preempt());
-                            System.out.println(cpu.getProcess().getPid() + " was preempted");
                             cpu.rmProcess();
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         }
                     }
@@ -368,10 +365,11 @@ public class Scheduler {
                     if (proc.timeInIdleQueue() > 1200) {
                         proc.priority--;
                         System.out.print("[time "+totalMS+"] ");
-                        System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + "due to aging");
+                        System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + " due to aging");
                     }
                 }
             });
+            this.tick();
             allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
@@ -392,7 +390,6 @@ public class Scheduler {
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
                         proc.switchContext(ProcessState.terminated);
-                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -402,13 +399,11 @@ public class Scheduler {
                     CPU cpu = cpus.get(j);
                     if (!(readyQueue.isEmpty())) {
                         if (cpu.isIdle()) {
-                            System.out.println(readyQueue.toString() + " is entering CPU");
+                            
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         } else if (cpu.getProcess().priority > readyQueue.peek().priority) {
                             readyQueue.add(cpu.getProcess().preempt());
-                            System.out.println(cpu.getProcess().getPid() + " was preempted");
                             cpu.rmProcess();
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         }
                     }
