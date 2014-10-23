@@ -129,6 +129,7 @@ public class Process extends AbstractProcess {
         this.ctxSwitchLagTime = ctxSwitchLagTime;
         //And initiate the state of this machine:
         this.switchContext(ProcessState.idle);
+        this.originalBT = numberOfBursts;
 
     }
 
@@ -207,6 +208,9 @@ public class Process extends AbstractProcess {
         this.pState = ProcessState.idle;
         this.generateCPUTime(); // create a CPU time for the process.
         //is there a ctx switch for this?
+        //reset the idle time
+        this.resetCurIdleTime();
+        entRdrStr();
     }
 
     void switchToActive() {
@@ -239,16 +243,20 @@ public class Process extends AbstractProcess {
         switch (newContext) {
             case idle:
                 switchToIdle();
+                entRdrStr();
                 break;
             case IOWait:
             case userWait:
                 switchToWait();
+                ttlBrstStr();
                 break;
             case active:
                 switchToActive();
                 break;
             case terminated:
                 switchToTerminated();
+                entTerminatedStr();
+                
                 break;
             default:
                 this.pState = newContext;
@@ -369,7 +377,8 @@ public class Process extends AbstractProcess {
                 switchToIdle();
 
             }
-            //switch to idle
+            //update current idle queue time:
+            this.cIdleTime ++;
 
         }
 
@@ -541,5 +550,63 @@ public class Process extends AbstractProcess {
         this.ctxOverhead();
         return this;
     }
+    int cIdleTime = 0;
+    
+    public int timeInIdleQueue()
+    {
+        return cIdleTime;
+    }
+    public void resetCurIdleTime()
+    {
+        this.cIdleTime = 0;
+    }
+    String anc;
+    
+ 
+    private int originalBT = 0;
+    private long avgTrn() 
+    {
+        //return (this.getActiveTime()+this.getIdleTime()+this.getCtxSwitchTime()+this.getUserWaitTime()+this.getIoWaitTime()) / this.originalBT;
+        return (getTotalWaitTime() + this.getActiveTime() / this.originalBT);
+    
+    }
+    
+    private long avgTTLWait()
+    {
+        return (getTotalWaitTime() ) / this.originalBT;
+        
+    }
+    private long ttlTrn() 
+    {
+        return getTotalWaitTime() + this.getActiveTime();
+    }
+    private void ttlBrstStr() {
+        String pt = this.isInteractive? "Interactive" : "CPU-Bound";
+        anc = pt + "process ID " + pid + " CPU burst done (turnaround time " + ttlTrn() 
+                + "ms, total wait time " + this.getActiveTime();
+    }
+    private void entTerminatedStr() {
+        //[time 7989ms] CPU-bound process ID 5 terminated (avg turnaround time 587ms, avg total wait time 155ms)
+        String pt = this.isInteractive? "Interactive" : "CPU-Bound";
+        anc = pt + "process ID " + pid + " terminated (avg turnaround time "+ avgTrn() + "ms, avg total wait time " +
+                +avgTTLWait() + ")";
+    }
+    private void entRdrStr() {
+        String pt = this.isInteractive? "Interactive" : "CPU-Bound";
+        
+        anc = pt + " ID " + pid + " entered ready queue (requires " + this.burstValue + "ms CPU time; priority " + 
+                this.getPriority() + ")";
+    }
+    public String announce() {
+        if(anc != null )
+        {
+            String s = anc;
+            anc = null;
+            return s;
+        }
+        else
+            return null;
+    }
 }
-///final
+
+///final2
