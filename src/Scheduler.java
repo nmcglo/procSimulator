@@ -182,11 +182,11 @@ public class Scheduler {
         for (int i = 0; i < allProcesses.size(); i++) {
             if (allProcesses.get(i).pState == ProcessState.idle) {
                 readyQueue.add(allProcesses.get(i));
-                System.out.print("[time " + cpus.get(1).getIdleTime() + cpus.get(1).getUsageTime() + "ms] ");
             }
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
-            allProcesses.forEach(p -> p.tick());
+            this.tick();
+        	allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
                 if (!(cpu.isIdle())) {
@@ -206,7 +206,6 @@ public class Scheduler {
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
                         proc.switchContext(ProcessState.terminated);
-                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -292,6 +291,7 @@ public class Scheduler {
 //a running loop (pseudo anonymous function haha)
 
     public void runRR() {
+    	this.tick();
         for (CPU cp : cpus) {
             if (cp.getProcess().remCurrentCPUTime() == 0) // process is done.
             {
@@ -339,6 +339,7 @@ public class Scheduler {
                 if (proc.getPriority() > 0) {
                     if (proc.timeInIdleQueue() > 1200) {
                         proc.priority--;
+                        System.out.print("[time "+totalMS+"] ");
                         System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + "due to aging");
                     }
                 }
@@ -408,7 +409,6 @@ public class Scheduler {
     }
     long totalMS = 0;
     public void tick() {
-        totalMS ++;
         String w = "[time " ;
         String r = "ms] ";
         allProcesses.stream().forEach((p) -> {
@@ -425,7 +425,8 @@ public class Scheduler {
             {
             }
         });
-        }
+        totalMS ++;
+       }
     
 }
 
