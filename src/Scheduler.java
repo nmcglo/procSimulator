@@ -282,16 +282,25 @@ public class Scheduler {
     public void runRoundRobin() {
         rrWaitProcs = new ConcurrentLinkedQueue<>();
         rrIdleProcs = new ConcurrentLinkedQueue<>();
+        PriorityQueue<Process> x;
+        ArrayList<Process> y;
 //load up the processes:
         allProcesses.parallelStream().forEach((px) -> {
             rrIdleProcs.add(px);
         });
+        boolean runAgain;
+        do {
+            runRR();
+         x= new PriorityQueue<>(rrIdleProcs);
+         y = new ArrayList<>(rrWaitProcs);
+        }while(!isCPUBoundDone(x,y));
+   
     }
 //assuming that this method is called over and over again through
 //a running loop (pseudo anonymous function haha)
 
     public void runRR() {
-    	this.tick();
+        this.tick();
         for (CPU cp : cpus) {
             if (cp.getProcess().remCurrentCPUTime() == 0) // process is done.
             {
@@ -323,6 +332,7 @@ public class Scheduler {
         cpus.parallelStream().forEach((c) -> c.tick());
         rrCT = (rrCT + 1) % RRTimeSlice;
     }
+
 
     public void runPreemptivePriority() {
         PriorityComparator pComparator = new PriorityComparator();
