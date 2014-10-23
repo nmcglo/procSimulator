@@ -386,7 +386,7 @@ public class Scheduler
 			{ 
 				if(proc.getPriority() > 0)
 				{
-					if(proc.getTiming(ProcessState.idle) > 1200)
+					if(proc.timeInIdleQueue() > 1200)
 					{
 						proc.priority--;
 						System.out.println("Increased priority of CPU-bound process ID "+ proc.getPid() + " to " + proc.getPriority() + "due to aging");
