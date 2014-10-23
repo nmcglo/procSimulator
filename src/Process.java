@@ -38,7 +38,6 @@ import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import org.jruby.embed.ScriptingContainer;
 
 /**
  * Process represents a process running in the simulation. When created, the
