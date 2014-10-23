@@ -316,6 +316,9 @@ public class Scheduler {
     public void runRR() {
         this.tick();
         for (CPU cp : cpus) {
+        	 if (cp.isIdle()) {
+                 cp.addProcess(rrIdleProcs.poll());
+        	 }
             if (cp.getProcess().remCurrentCPUTime() == 0) // process is done.
             {
                 rrWaitProcs.add(cp.getProcess());
