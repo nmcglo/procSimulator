@@ -168,12 +168,6 @@ public class Scheduler {
                 break;
         }
     }
-    /* Changes made to rSJF:
-     * 1. changed forEach to regular for loops for 2nd and 3rd big if statements.
-     * 2. edited isIdle in CPU.
-     * 3. changed member variables in AbstractCPU to protected, not private
-     * 4. removed member variables in CPU, thus only being in AbstractCPU now
-     * 5. added else statement in tick() in Process. */
 
     public void runShortestJobFirst() {
         SJFComparator sfjComparator = new SJFComparator();
@@ -205,7 +199,6 @@ public class Scheduler {
                         readyQueue.add(proc);
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
-                        proc.switchContext(ProcessState.terminated);
                         waitingList.remove(proc);
                     }
                 }
@@ -219,6 +212,7 @@ public class Scheduler {
                 }
             }
         }
+        this.tick(); //Need extra tick or we won't see termination of last proc.
     }
 
     public void runShortestJobFirstPreemption() {
@@ -231,6 +225,7 @@ public class Scheduler {
             }
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
+        	this.tick();
             allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
@@ -250,8 +245,6 @@ public class Scheduler {
                         readyQueue.add(proc);
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
-                        proc.switchContext(ProcessState.terminated);
-                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -261,19 +254,17 @@ public class Scheduler {
                     CPU cpu = cpus.get(j);
                     if (!(readyQueue.isEmpty())) {
                         if (cpu.isIdle()) {
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         } else if (cpu.getProcess().burstValue > readyQueue.peek().burstValue) {
                             readyQueue.add(cpu.getProcess().preempt());
-                            System.out.println(cpu.getProcess().getPid() + " was preempted");
                             cpu.rmProcess();
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         }
                     }
                 }
             }
         }
+        this.tick();//Sean's edit 
     }
 
 ///***** ROUND ROBIN CODE *******////
@@ -306,6 +297,7 @@ public class Scheduler {
             }
 
         } while (isDone != lp);
+        this.tick(); //Sean's edit
 
     }
 //assuming that this method is called over and over again through
@@ -374,15 +366,17 @@ public class Scheduler {
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
 //Check for AGING
+        	this.tick(); //Sean's edit (10/23/14, 8:57am)
             readyQueue.forEach(proc -> {
                 if (proc.getPriority() > 0) {
                     if (proc.timeInIdleQueue() > 1200) {
                         proc.priority--;
                         System.out.print("[time " + totalMS + "] ");
-                        System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + "due to aging");
+                        System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + " due to aging");
                     }
                 }
             });
+            
             allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
@@ -403,7 +397,6 @@ public class Scheduler {
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
                         proc.switchContext(ProcessState.terminated);
-                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -413,19 +406,17 @@ public class Scheduler {
                     CPU cpu = cpus.get(j);
                     if (!(readyQueue.isEmpty())) {
                         if (cpu.isIdle()) {
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         } else if (cpu.getProcess().priority > readyQueue.peek().priority) {
                             readyQueue.add(cpu.getProcess().preempt());
-                            System.out.println(cpu.getProcess().getPid() + " was preempted");
                             cpu.rmProcess();
-                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         }
                     }
                 }
             }
         }
+        this.tick(); //Sean's edit 
     }
 
     public boolean isCPUBoundDone(PriorityQueue<Process> readyQueue, ArrayList<Process> waitingList) {
@@ -444,8 +435,20 @@ public class Scheduler {
                 return done;
             }
         }
+        //Checks if there's a CPU-bound process in a CPU (still executing).
+        Iterator<CPU> cpuIter = cpus.iterator();
+        while(cpuIter.hasNext()){
+        	CPU cpu = cpuIter.next();
+        	if(!(cpu.isIdle())){
+        		if(!(cpu.getProcess().isInteractive())){
+        			done = false;
+        			return done;
+        		}
+        	}
+        }
         return done;
     }
+    
     long totalMS = 0;
 
     public void tick() {
