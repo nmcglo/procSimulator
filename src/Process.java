@@ -583,7 +583,7 @@ public class Process extends AbstractProcess {
     private void ttlBrstStr() {
         String pt = this.isInteractive? "Interactive" : "CPU-Bound";
         anc = pt + " process ID " + pid + " CPU burst done (turnaround time " + ttlTrn() 
-                + "ms, total wait time " + this.getActiveTime();
+                + "ms, total wait time " + this.getActiveTime()+")";
     }
     private void entTerminatedStr() {
         //[time 7989ms] CPU-bound process ID 5 terminated (avg turnaround time 587ms, avg total wait time 155ms)
