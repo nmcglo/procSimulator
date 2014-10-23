@@ -15,7 +15,7 @@ public class RunScheduler {
 		int ctxSwitchTime = 2;
 		int numCPUBoundBursts = 8;
 		int rrTimeSlice = 4;
-		AlgorithmType algo = AlgorithmType.RR;
+		AlgorithmType algo = AlgorithmType.SJF;
 		cpus = new ArrayList<CPU>(numCPUs);
 		processes = new ArrayList<Process>(numOfProcs);
 		generateProcesses(numOfProcs, numCPUBoundBursts, ctxSwitchTime, algo);

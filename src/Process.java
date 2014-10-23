@@ -255,7 +255,6 @@ public class Process extends AbstractProcess {
                 break;
             case terminated:
                 switchToTerminated();
-                System.out.println("OGGABOOGA");
                 entTerminatedStr();
                 
                 break;
@@ -371,11 +370,11 @@ public class Process extends AbstractProcess {
                     this.pState = ProcessState.terminated;
                 }
                 //switch to waiting!
-                switchToWait(); //should add some wait time, and then switch context.
+                switchContext(ProcessState.IOWait); //should add some wait time, and then switch context.
 
             } else if (ttlWaitRem() == 0 && (pState == ProcessState.userWait || pState == ProcessState.IOWait)) {
                 //initiate a change to the idle state.
-                switchToIdle();
+                switchContext(ProcessState.idle);
 
             }
             //update current idle queue time:
@@ -583,13 +582,13 @@ public class Process extends AbstractProcess {
     }
     private void ttlBrstStr() {
         String pt = this.isInteractive? "Interactive" : "CPU-Bound";
-        anc = pt + "process ID " + pid + " CPU burst done (turnaround time " + ttlTrn() 
+        anc = pt + " process ID " + pid + " CPU burst done (turnaround time " + ttlTrn() 
                 + "ms, total wait time " + this.getActiveTime();
     }
     private void entTerminatedStr() {
         //[time 7989ms] CPU-bound process ID 5 terminated (avg turnaround time 587ms, avg total wait time 155ms)
         String pt = this.isInteractive? "Interactive" : "CPU-Bound";
-        anc = pt + "process ID " + pid + " terminated (avg turnaround time "+ avgTrn() + "ms, avg total wait time " +
+        anc = pt + " process ID " + pid + " terminated (avg turnaround time "+ avgTrn() + "ms, avg total wait time " +
                 +avgTTLWait() + ")";
     }
     private void entRdrStr() {

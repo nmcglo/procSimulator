@@ -44,9 +44,9 @@ public class CPU extends AbstractCPU{
             ///print msg:
             //[time 4279ms] Context switch (swapping out process ID 4 for process ID 17)
             
-            System.out.println("[time "+ totalTicks +"ms] Context switch (swapping out process ID " + oldP + "for process ID " + p.getPid()+")");  
-                        oldP = p.getPid();
-                    }
+            System.out.println("[time "+ totalTicks +"ms] Context switch (swapping out process ID " + oldP + " for process ID " + p.getPid()+")");  
+            oldP = p.getPid();
+        }
         this.process = p;
     }
 
