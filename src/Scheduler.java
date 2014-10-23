@@ -186,7 +186,7 @@ public class Scheduler {
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
             this.tick();
-        	allProcesses.forEach(p -> p.tick());
+            allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
                 if (!(cpu.isIdle())) {
@@ -231,7 +231,6 @@ public class Scheduler {
             }
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
-        	this.tick();
             allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
@@ -252,6 +251,7 @@ public class Scheduler {
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
                         proc.switchContext(ProcessState.terminated);
+                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -261,10 +261,13 @@ public class Scheduler {
                     CPU cpu = cpus.get(j);
                     if (!(readyQueue.isEmpty())) {
                         if (cpu.isIdle()) {
+                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         } else if (cpu.getProcess().burstValue > readyQueue.peek().burstValue) {
                             readyQueue.add(cpu.getProcess().preempt());
+                            System.out.println(cpu.getProcess().getPid() + " was preempted");
                             cpu.rmProcess();
+                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         }
                     }
@@ -272,15 +275,14 @@ public class Scheduler {
             }
         }
     }
-    
-///***** ROUND ROBIN CODE *******////
 
-    public static ConcurrentLinkedQueue<Process> rrWaitProcs;
+///***** ROUND ROBIN CODE *******////
+    public static ArrayList<Process> rrWaitProcs;
     public static ConcurrentLinkedQueue<Process> rrIdleProcs;
     public static int rrCT = 0;
 
     public void runRoundRobin() {
-        rrWaitProcs = new ConcurrentLinkedQueue<>();
+        rrWaitProcs = new ArrayList<>();
         rrIdleProcs = new ConcurrentLinkedQueue<>();
         PriorityQueue<Process> x;
         ArrayList<Process> y;
@@ -290,65 +292,77 @@ public class Scheduler {
         });
         long isDone;
         long lp;
-  
-        
-        lp = allProcesses.stream().filter(p->p.isInteractive == false).count();
+
+        lp = allProcesses.stream().filter(p -> p.isInteractive == false).count();
+        System.out.println(lp);
         boolean runAgain;
         do {
             isDone = 0;
             runRR();
-            for(Process p : allProcesses)
-                if (p.getCurrentState() == ProcessState.terminated && p.isInteractive == false)
-                    isDone ++;
-            
-            
-           
-            
-        }while(isDone == lp);
-   
+            for (Process p : allProcesses) {
+                if (p.getCurrentState() == ProcessState.terminated && p.isInteractive == false) {
+                    isDone++;
+                }
+            }
+
+        } while (isDone != lp);
+
     }
 //assuming that this method is called over and over again through
 //a running loop (pseudo anonymous function haha)
 
     public void runRR() {
         this.tick();
-        for (CPU cp : cpus) {
-        	 if (cp.isIdle()) {
-                 cp.addProcess(rrIdleProcs.poll());
-        	 }
-            if (cp.getProcess().remCurrentCPUTime() == 0) // process is done.
-            {
-                rrWaitProcs.add(cp.getProcess());
-                cp.rmProcess();
+        try {
+            ///load and unload cpu:
+            if (rrIdleProcs.size() > 0 && rrCT != RRTimeSlice) {
+                for (CPU cp : cpus) {
+
+                    //if cpu has proc, and it is done, move it to wait queue.
+                    if (cp.getProcess() != null && cp.getProcess().isWaiting()) {
+                        rrWaitProcs.add(cp.getProcess());
+                        cp.rmProcess();
+                    }
+                    if (cp.getProcess() == null) {
+                        //if cpu is empty, add a process.
+                        cp.addProcess(rrIdleProcs.poll());
+                        cp.getProcess().setState(ProcessState.active);
+                    }
+                }
+            } else if (rrCT == RRTimeSlice) {
+                for (CPU cp : cpus) {
+                    //if cpu has a proc, and it is done, move it to wait queue.
+                    if (cp.getProcess() != null) {
+                        rrWaitProcs.add(cp.getProcess());
+                        cp.rmProcess();
+
+                    }
+                    if (cp.getProcess() == null) {
+                        cp.addProcess(rrIdleProcs.poll());
+                        cp.getProcess().setState(ProcessState.active);
+                    }
+
+                }
+
             }
-            if (cp.isIdle()) {
-                cp.addProcess(rrIdleProcs.poll());
-            }
-//and do the time slice thing
+        } catch (Exception e) {
+            //ddx -er
         }
-        if (rrCT == RRTimeSlice) {
-//slice of time has happened. Preempt the cpu procs:
-            for (CPU cp : cpus) {
-                rrWaitProcs.add(cp.getProcess());
-                cp.rmProcess();
-                cp.addProcess(rrWaitProcs.poll());
-            }
-        }
-//clean up the Process stuff - move readies out of wait:
-        rrWaitProcs.stream().filter((p) -> (!p.isWaiting())).map((p) -> {
-            rrIdleProcs.add(p);
-            return p;
-        }).forEach((p) -> {
-            rrWaitProcs.remove(p);
-        });
-//Tick All Processes
+
+        //Tick All Processes
         allProcesses.forEach((p) -> p.tick());
         cpus.parallelStream().forEach((c) -> c.tick());
+
         rrCT = (rrCT + 1) % RRTimeSlice;
+        //move procs from wait to idle, if they are no longer waiting on IO/USER
+        for (int i = 0; i < rrWaitProcs.size(); i++) {
+            if (rrWaitProcs.get(i).isWaiting() == false || rrWaitProcs.get(i).getCurrentState() == ProcessState.idle) {
+                rrIdleProcs.add(rrWaitProcs.remove(i));
+            }
+        }
     }
+
 ///END ROUND ROBIN **********************************************************
-
-
     public void runPreemptivePriority() {
         PriorityComparator pComparator = new PriorityComparator();
         PriorityQueue<Process> readyQueue = new PriorityQueue<Process>(pComparator);
@@ -364,12 +378,11 @@ public class Scheduler {
                 if (proc.getPriority() > 0) {
                     if (proc.timeInIdleQueue() > 1200) {
                         proc.priority--;
-                        System.out.print("[time "+totalMS+"] ");
-                        System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + " due to aging");
+                        System.out.print("[time " + totalMS + "] ");
+                        System.out.println("Increased priority of CPU-bound process ID " + proc.getPid() + " to " + proc.getPriority() + "due to aging");
                     }
                 }
             });
-            this.tick();
             allProcesses.forEach(p -> p.tick());
             cpus.forEach(cpu -> cpu.tick());
             cpus.forEach(cpu -> {
@@ -390,6 +403,7 @@ public class Scheduler {
                         waitingList.remove(proc);
                     } else if (proc.getCurrentState() == ProcessState.terminated) {
                         proc.switchContext(ProcessState.terminated);
+                        System.out.println(proc.getPid() + " has terminated");
                         waitingList.remove(proc);
                     }
                 }
@@ -399,11 +413,13 @@ public class Scheduler {
                     CPU cpu = cpus.get(j);
                     if (!(readyQueue.isEmpty())) {
                         if (cpu.isIdle()) {
-                            
+                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         } else if (cpu.getProcess().priority > readyQueue.peek().priority) {
                             readyQueue.add(cpu.getProcess().preempt());
+                            System.out.println(cpu.getProcess().getPid() + " was preempted");
                             cpu.rmProcess();
+                            System.out.println(readyQueue.toString() + " is entering CPU");
                             cpu.addProcess(readyQueue.poll().switchContext(ProcessState.active));
                         }
                     }
@@ -431,26 +447,25 @@ public class Scheduler {
         return done;
     }
     long totalMS = 0;
+
     public void tick() {
-        String w = "[time " ;
+        String w = "[time ";
         String r = "ms] ";
         allProcesses.stream().forEach((p) -> {
-            try
-            {
+            try {
                 String val = p.announce();
                 int crappyVariable = val.length();
-                if (val.equalsIgnoreCase("null"))
+                if (val.equalsIgnoreCase("null")) {
                     throw new NullPointerException();
-                 
+                }
+
                 System.out.println(w + totalMS + r + val);
-            }
-            catch (NullPointerException e)
-            {
+            } catch (NullPointerException e) {
             }
         });
-        totalMS ++;
-       }
-    
+        totalMS++;
+    }
+
 }
 
-//ADD TICK 1
+//ADD TICK 2
