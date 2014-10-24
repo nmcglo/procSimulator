@@ -286,7 +286,7 @@ public class Scheduler {
         long lp;
 
         lp = allProcesses.stream().filter(p -> p.isInteractive == false).count();
-        System.out.println(lp);
+        
         boolean runAgain;
         do {
             isDone = 0;
@@ -338,13 +338,23 @@ public class Scheduler {
                 }
 
             }
+            
+            for(CPU cp : cpus) {
+                if(cp.getProcess().isWaiting())
+                {
+                    rrWaitProcs.add(cp.getProcess());
+                    cp.rmProcess();
+                }
+                
+            }
         } catch (Exception e) {
             //ddx -er
+     
         }
 
         //Tick All Processes
         allProcesses.forEach((p) -> p.tick());
-        cpus.parallelStream().forEach((c) -> c.tick());
+        cpus.forEach((c) -> c.tick());
 
         rrCT = (rrCT + 1) % RRTimeSlice;
         //move procs from wait to idle, if they are no longer waiting on IO/USER

@@ -1,13 +1,14 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-
-
+import java.util.Scanner;
+import java.lang.Exception;
+import java.lang.*;
 public class RunScheduler {
 
 	static ArrayList<CPU> cpus;
 	static ArrayList<Process> processes;
-	
+	/*
 	public static void main (String args[]){
 		
 		int numCPUs = 4;
@@ -22,6 +23,65 @@ public class RunScheduler {
 		generateCPUs(numCPUs);
 		Scheduler scheduler = new Scheduler(processes, cpus, ctxSwitchTime, rrTimeSlice, algo);
 		scheduler.runSearchAlgorithm();
+	}*/
+	public static void main (String args[]){
+		//runs the scheduler for all of the types of schedulers
+		//check args:
+		
+		if(args.length > 0)
+		try{	
+				numCPUs = Integer.parseInt(args[0]);
+				numOfProcs = Integer.parseInt(args[1]);
+				ctxSwitchTime = Integer.parseInt(args[2]);
+				numCPUBoundBursts = Integer.parseInt(args[3]);
+				rrTimeSlice = Integer.parseInt(args[4]);
+		}
+		catch(Exception e)
+		{
+			System.out.println("When using command line arguments, you should use the form:");
+			System.out.println("nCPUS nPROCS CTXSwitchTime CPUBursts rrTimeSlice");
+			System.out.println("All or none of these are required.");
+			System.out.println("****PRESS ENTER TO CONTINUE****");
+			Scanner k2 = new Scanner(System.in);
+			k2.nextLine();
+
+		}
+
+		String[] types = {"RR","SJF","SJFE","PP"};
+		for(String tp : types)
+		{
+			System.out.println("Starting run for " + tp + " scheduler algorithm.");
+			System.out.println("************************************************");
+			runSched(tp);
+			System.out.println("\n\n************************************************");
+			System.out.println(tp + "<- run is complete.");
+			System.out.println("Press <ENTER> to continue.");
+			Scanner keyboard = new Scanner(System.in);
+			keyboard.nextLine();
+
+		}
+	}
+	public static int numCPUs = 2;
+	public static int numOfProcs = 10;
+	public static int ctxSwitchTime = 2;
+	public static int numCPUBoundBursts = 8;
+	public static int rrTimeSlice = 4;
+
+
+	public static void runSched(String tp)
+	{
+
+		//int numOfProcs = 12;
+		//int ctxSwitchTime = 2;
+		//int numCPUBoundBursts = 8;
+		//int rrTimeSlice = 4;
+		AlgorithmType algo = AlgorithmType.valueOf(tp);
+		cpus = new ArrayList<CPU>(numCPUs);
+		processes = new ArrayList<Process>(numOfProcs);
+		generateProcesses(numOfProcs, numCPUBoundBursts, ctxSwitchTime, algo);
+		generateCPUs(numCPUs);
+		Scheduler scheduler = new Scheduler(processes, cpus, ctxSwitchTime, rrTimeSlice, algo);
+		scheduler.runSearchAlgorithm();	
 	}
 	
 	public static void generateProcesses(int numProcs, int numCPUBoundBursts, int ctxSwitchTime, AlgorithmType algo){
