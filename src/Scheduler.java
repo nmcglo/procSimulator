@@ -213,7 +213,7 @@ public class Scheduler {
                 }
             }
         }
-        this.tick(); //Need extra tick or we won't see termination of last proc.
+        this.tick();
     }
 
     public void runShortestJobFirstPreemption() {
@@ -265,7 +265,7 @@ public class Scheduler {
                 }
             }
         }
-        this.tick();//Sean's edit 
+        this.tick();
     }
 
 ///***** ROUND ROBIN CODE *******////
@@ -276,8 +276,6 @@ public class Scheduler {
     public void runRoundRobin() {
         rrWaitProcs = new ArrayList<>();
         rrIdleProcs = new ConcurrentLinkedQueue<>();
-        PriorityQueue<Process> x;
-        ArrayList<Process> y;
 //load up the processes:
         allProcesses.parallelStream().forEach((px) -> {
             rrIdleProcs.add(px);
@@ -287,7 +285,6 @@ public class Scheduler {
 
         lp = allProcesses.stream().filter(p -> p.isInteractive == false).count();
         
-        boolean runAgain;
         do {
             isDone = 0;
             runRR();
@@ -298,7 +295,7 @@ public class Scheduler {
             }
 
         } while (isDone != lp);
-        this.tick(); //Sean's edit
+        this.tick();
 
     }
 //assuming that this method is called over and over again through
@@ -377,7 +374,7 @@ public class Scheduler {
         }
         while (!(isCPUBoundDone(readyQueue, waitingList))) {
 //Check for AGING
-        	this.tick(); //Sean's edit (10/23/14, 8:57am)
+        	this.tick(); 
             readyQueue.forEach(proc -> {
                 if (proc.getPriority() > 0) {
                     if (proc.timeInIdleQueue() > 1200) {
@@ -426,7 +423,7 @@ public class Scheduler {
                 }
             }
         }
-        this.tick(); //Sean's edit 
+        this.tick(); 
     }
 
     public boolean isCPUBoundDone(PriorityQueue<Process> readyQueue, ArrayList<Process> waitingList) {
@@ -467,7 +464,7 @@ public class Scheduler {
         allProcesses.stream().forEach((p) -> {
             try {
                 String val = p.announce();
-                int crappyVariable = val.length();
+                //int crappyVariable = val.length();
                 if (val.equalsIgnoreCase("null")) {
                     throw new NullPointerException();
                 }
@@ -540,6 +537,5 @@ public class Scheduler {
 
 }
 
-//ADD TICK 2
 
 
