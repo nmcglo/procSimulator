@@ -24,19 +24,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 /**
@@ -361,6 +354,8 @@ public class Process extends AbstractProcess {
                 case userWait:
                     this.usrWaitRem--;
                     break;
+			default:
+				break;
             }
                 //next, see if we need to move out of our current context:
             //if the cpu time out, we switch to a wait speech
@@ -564,16 +559,17 @@ public class Process extends AbstractProcess {
     
  
     private int originalBT = 0;
+    
     private long avgTrn() 
     {
         //return (this.getActiveTime()+this.getIdleTime()+this.getCtxSwitchTime()+this.getUserWaitTime()+this.getIoWaitTime()) / this.originalBT;
-        return (getTotalWaitTime() + this.getActiveTime() / this.originalBT);
+        return ((getTotalWaitTime() + this.getActiveTime())/this.originalBT) / this.originalBT;
     
     }
     
     private long avgTTLWait()
     {
-        return (getTotalWaitTime() ) / this.originalBT;
+        return (getTotalWaitTime()/this.originalBT ) / this.originalBT;
         
     }
     private long ttlTrn() 
