@@ -153,6 +153,7 @@ public class Process extends AbstractProcess {
     	Random rand = new Random();
 	    int randomNum = rand.nextInt((3000 - 200) + 1) + 200;
         this.burstValue = randomNum;
+        //    this.burstValue = 3;
     }
 
     /**
@@ -584,6 +585,7 @@ public class Process extends AbstractProcess {
         anc = pt + " process ID " + pid + " CPU burst done (turnaround time " + ttlTrn() 
                 + "ms, total wait time " + this.getActiveTime()+")";
     }
+    private boolean isTermStrOut = false;
     private void entTerminatedStr() {
         //[time 7989ms] CPU-bound process ID 5 terminated (avg turnaround time 587ms, avg total wait time 155ms)
         String pt = this.isInteractive? "Interactive" : "CPU-Bound";
@@ -597,14 +599,26 @@ public class Process extends AbstractProcess {
                 this.getPriority() + ")";
     }
     public String announce() {
-        if(anc != null )
+        if(isTermStrOut == false)
         {
-            String s = anc;
-            anc = null;
-            return s;
+            if(anc != null )
+            {
+                if (this.getCurrentState() == ProcessState.terminated)
+                {
+                    isTermStrOut = true;
+                }
+                String s = anc;
+                anc = null;
+
+                return s;
+                
+            }   
+            else
+                return null;
         }
         else
             return null;
+           
     }
 }
 
